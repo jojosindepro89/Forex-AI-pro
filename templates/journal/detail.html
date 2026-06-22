@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Trade #{{ entry.pk }} Detail{% endblock %}
+{% block content %}
+<div class="page-inner" style="max-width: 800px;">
+  <div class="breadcrumb">
+    <a href="{% url 'journal:list' %}">Journal</a>
+    <span class="breadcrumb-sep">/</span>
+    <span>Trade #{{ entry.pk }}</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ entry.pair }} Trade Details</h1>
+      <p class="page-subtitle">Logged on {{ entry.created_at|date:"F j, Y · H:i" }}</p>
+    </div>
+    <div class="page-actions">
+      <a href="{% url 'journal:edit' entry.pk %}" class="btn btn-secondary btn-sm">📝 Edit Trade</a>
+      <a href="{% url 'journal:delete' entry.pk %}" class="btn btn-secondary btn-sm text-sell" style="border-color: var(--signal-sell-bg);">🗑 Delete</a>
+    </div>
+  </div>
+
+  <div class="grid grid-2 gap-6">
+    <!-- Trade summary -->
+    <div class="card flex flex-col gap-4">
+      <h2 class="section-title">Execution Summary</h2>
+      
+      <div class="flex justify-between items-center p-3 rounded" style="background: var(--bg-elevated);">
+        <span class="text-sm font-semibold">Direction</span>
+        <span class="signal-badge {% if entry.direction == 'LONG' %}buy{% else %}sell{% endif %}">
+          {{ entry.direction }}
+        </span>
+      </div>
+
+      <div class="flex justify-between items-center p-3 rounded" style="background: var(--bg-elevated);">
+        <span class="text-sm font-semibold">Outcome</span>
+        <span class="signal-badge {% if entry.outcome == 'WIN' %}buy{% elif entry.outcome == 'LOSS' %}sell{% else %}hold{% endif %}">
+          {{ entry.outcome }}
+        </span>
+      </div>
+
+      <div class="flex justify-between items-center p-3 rounded" style="background: var(--bg-elevated);">
+        <span class="text-sm font-semibold">Profit / Loss (PnL)</span>
+        <span class="font-bold {% if entry.pnl >= 0 %}pnl-positive{% else %}pnl-negative{% endif %}" style="font-size: 1.1rem;">
+          {% if entry.pnl >= 0 %}+{% endif %}${{ entry.pnl|floatformat:2 }}
+        </span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="flex flex-col gap-3 font-mono text-xs">
+        <div class="flex justify-between">
+          <span class="text-muted">Entry Price</span>
+          <span class="font-bold">{{ entry.entry_price|floatformat:5 }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-muted">Exit Price</span>
+          <span class="font-bold">{{ entry.exit_price|floatformat:5|default:"—" }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-muted">Stop Loss</span>
+          <span class="font-bold text-sell">{{ entry.stop_loss|floatformat:5|default:"—" }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-muted">Take Profit</span>
+          <span class="font-bold text-buy">{{ entry.take_profit|floatformat:5|default:"—" }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-muted">Lot Size</span>
+          <span class="font-bold">{{ entry.lot_size|default:"—" }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes & Screenshot -->
+    <div class="card flex flex-col gap-4">
+      <h2 class="section-title">Analysis & Notes</h2>
+      <div class="p-4 rounded text-sm text-secondary" style="background: var(--bg-elevated); min-height: 120px; line-height: 1.6;">
+        {{ entry.notes|linebreaks|default:"No notes or market annotations logged for this trade." }}
+      </div>
+      
+      {% if entry.screenshot %}
+      <div class="mt-2">
+        <span class="text-xs font-semibold text-muted uppercase tracking-wider mb-2 block">Attached Chart Screenshot</span>
+        <div class="rounded border overflow-hidden" style="max-height: 240px; background: var(--bg-base);">
+          <img src="{{ entry.screenshot.url }}" alt="Trade Chart Screenshot" style="width: 100%; height: auto; object-fit: contain;" />
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="mt-6 flex justify-end">
+    <a href="{% url 'journal:list' %}" class="btn btn-secondary">← Back to Journal</a>
+  </div>
+</div>
+{% endblock %}

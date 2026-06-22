@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}AI Signals{% endblock %}
+{% block content %}
+<div class="page-inner">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">AI Market Signals</h1>
+      <p class="page-subtitle">Real-time signals for 6 major forex pairs · Powered by Twelve Data API · 
+        <span id="market-status-indicator">
+          {% if market_active %}
+            <span class="live-indicator"><span class="live-dot" aria-hidden="true"></span>Market Open</span>
+          {% else %}
+            <span class="live-indicator closed" style="color: var(--text-muted);"><span class="live-dot" style="background-color: var(--text-muted);" aria-hidden="true"></span>Market Closed (Weekend Sim)</span>
+          {% endif %}
+        </span>
+      </p>
+    </div>
+  </div>
+
+  <div class="grid grid-auto">
+    {% for signal in signals %}
+    <div class="card signal-card {{ signal.signal_type|lower }}">
+      <div class="flex items-center justify-between mb-4">
+        <span class="signal-pair">{{ signal.symbol }}</span>
+        <span class="signal-badge {{ signal.signal_type|lower }}">
+          <span class="signal-dot" aria-hidden="true"></span>{{ signal.signal_type }}
+        </span>
+      </div>
+      <div class="price-display mb-1">{{ signal.entry_price|floatformat:5 }}</div>
+
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs text-muted">Confidence Score</span>
+        <span class="font-mono font-bold {% if signal.confidence >= 70 %}text-buy{% else %}text-sell{% endif %}">{{ signal.confidence }}%</span>
+      </div>
+      <div class="confidence-bar mb-4" role="meter" aria-label="Confidence {{ signal.confidence }}%">
+        <div class="confidence-fill {% if signal.confidence >= 70 %}high{% elif signal.confidence >= 50 %}medium{% else %}low{% endif %}" style="width:{{ signal.confidence }}%"></div>
+      </div>
+
+      <div class="signal-meta">
+        <div class="signal-meta-item">
+          <span class="signal-meta-label">Stop Loss</span>
+          <span class="signal-meta-value text-sell">{{ signal.stop_loss }}</span>
+        </div>
+        <div class="signal-meta-item">
+          <span class="signal-meta-label">Take Profit</span>
+          <span class="signal-meta-value text-buy">{{ signal.take_profit }}</span>
+        </div>
+        <div class="signal-meta-item">
+          <span class="signal-meta-label">R:R Ratio</span>
+          <span class="signal-meta-value">1:2</span>
+        </div>
+      </div>
+
+      {% if signal.rsi or signal.macd %}
+      <div class="flex gap-2 flex-wrap mt-3">
+        {% if signal.rsi %}<span class="indicator-pill">RSI {{ signal.rsi|floatformat:1 }}</span>{% endif %}
+        {% if signal.macd %}<span class="indicator-pill">MACD</span>{% endif %}
+        <span class="indicator-pill">BB Bands</span>
+        <span class="indicator-pill">EMA</span>
+      </div>
+      {% endif %}
+
+      <div class="divider"></div>
+      <p class="text-xs text-secondary">{{ signal.reasoning|truncatechars:100 }}</p>
+
+      <a href="{% url 'signals:signal_detail' signal.symbol|slugify %}" class="btn btn-secondary btn-block mt-4" style="text-decoration:none;">View Full Analysis →</a>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="grid-column:1/-1;">
+      <div class="empty-state-icon" aria-hidden="true">📡</div>
+      <div class="empty-state-title">Loading signals from Twelve Data API...</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-navy-950: #081627;
+  --color-navy-900: #0c1f36;
+  --color-navy-800: #132a48;
+  --color-navy-700: #1a375c;
+  --color-accent-primary: #5b21b6;
+  --color-accent-green: #3df270;
+  --color-accent-red: #ff3b30;
+  --color-accent-hold: #849ab8;
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-navy-950);
+  color: var(--color-accent-hold);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-navy-950);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-navy-800);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-navy-700);
+}
+
+/* Price Flash Animations */
+@keyframes priceUp {
+  0% { background-color: rgba(61, 242, 112, 0.25); }
+  100% { background-color: transparent; }
+}
+
+@keyframes priceDown {
+  0% { background-color: rgba(255, 59, 48, 0.25); }
+  100% { background-color: transparent; }
+}
+
+.price-flash-up {
+  animation: priceUp 0.8s ease-out;
+}
+
+.price-flash-down {
+  animation: priceDown 0.8s ease-out;
+}

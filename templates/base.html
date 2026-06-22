@@ -1,0 +1,206 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ request.COOKIES.theme|default:'dark' }}" id="html-root">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}ForexAI Pro{% endblock %} — AI-Powered Forex Intelligence</title>
+  <meta name="description" content="{% block meta_description %}ForexAI Pro: AI-powered forex market intelligence. Real-time signals, technical analysis, and risk management.{% endblock %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────── -->
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <a href="{% url 'core:landing' %}" class="nav-brand" aria-label="ForexAI Pro home">
+    <div class="nav-logo">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+        <rect width="36" height="36" rx="9" fill="url(#ng)"/>
+        <path d="M9 23L16 13L21 18L28 9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="28" cy="9" r="3" fill="#00f5a0"/>
+        <defs>
+          <linearGradient id="ng" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#0f3460"/><stop offset="1" stop-color="#533483"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <span class="nav-title">ForexAI<span class="nav-title-pro">Pro</span></span>
+  </a>
+
+  <div class="nav-links" role="menubar">
+    {% if request.user.is_authenticated %}
+      <a href="{% url 'signals:dashboard' %}" class="nav-link {% if request.resolver_match.namespace == 'signals' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}" role="menuitem">Dashboard</a>
+      <a href="{% url 'signals:signal_list' %}" class="nav-link {% if request.resolver_match.url_name == 'signal_list' %}active{% endif %}" role="menuitem">AI Signals</a>
+      <a href="{% url 'analytics:dashboard' %}" class="nav-link {% if request.resolver_match.namespace == 'analytics' %}active{% endif %}" role="menuitem">Analytics</a>
+      <a href="{% url 'backtesting:backtest' %}" class="nav-link {% if request.resolver_match.namespace == 'backtesting' %}active{% endif %}" role="menuitem">Backtesting</a>
+      <a href="{% url 'journal:list' %}" class="nav-link {% if request.resolver_match.namespace == 'journal' %}active{% endif %}" role="menuitem">Journal</a>
+    {% endif %}
+    <a href="{% url 'accounts:pricing' %}" class="nav-link {% if request.resolver_match.url_name == 'pricing' %}active{% endif %}" role="menuitem">Pricing</a>
+  </div>
+
+  <div class="nav-actions">
+    <!-- Voice Alert Toggle Button -->
+    {% if request.user.is_authenticated %}
+    <button id="alert-toggle" class="btn-icon" aria-label="Toggle voice alerts" title="Toggle voice alerts" style="color: var(--text-secondary); margin-right: 4px;">
+      <svg class="icon-bell-off" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block;">
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        <path d="M18.63 13A17.89 17.89 0 0 1 18 8"></path>
+        <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"></path>
+        <path d="M18 8a6 6 0 0 0-9.33-5"></path>
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+      </svg>
+      <svg class="icon-bell" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      </svg>
+    </button>
+
+    <!-- Notifications Inbox Button & Dropdown -->
+    <div style="position: relative; display: inline-block;">
+      <button id="notif-inbox-btn" class="btn-icon" aria-label="View recent signal logs" title="Signal logs" style="color: var(--text-secondary); margin-right: 8px; position: relative;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
+          <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+        </svg>
+        <span id="notif-badge" style="position: absolute; top: -2px; right: -2px; background-color: var(--signal-sell, #ff3b30); color: #fff; border-radius: 50%; width: 14px; height: 14px; font-size: 8px; font-weight: 800; display: none; align-items: center; justify-content: center; line-height: 1;">0</span>
+      </button>
+      
+      <!-- Notifications Dropdown Box -->
+      <div id="notif-dropdown" class="avatar-dropdown" style="right: 0; top: 110%; width: 320px; display: none; padding: 0; box-shadow: var(--shadow-lg); z-index: 999; border: 1px solid var(--bg-border);">
+        <div class="avatar-dropdown-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--bg-border);">
+          <span class="font-bold text-sm" style="color: var(--text-primary);">Recent Signal Logs</span>
+          <button id="clear-notifs-btn" style="background: none; border: none; color: var(--text-muted); font-size: 11px; cursor: pointer; text-decoration: underline;">Clear All</button>
+        </div>
+        <div id="notif-list-container" style="max-height: 280px; overflow-y: auto; padding: 8px 0;">
+          <div class="notif-empty-state" style="padding: 24px 16px; text-align: center; color: var(--text-muted); font-size: 12px;">
+            No recent signal alerts.
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Theme Toggle -->
+    <button id="theme-toggle" class="btn-icon" aria-label="Toggle light/dark mode" title="Toggle theme">
+      <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+
+    {% if request.user.is_authenticated %}
+      <span class="nav-badge badge-{{ request.user.plan }}">{{ request.user.plan_badge }}</span>
+      <div class="nav-avatar" id="avatar-menu-btn" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" aria-label="User menu">
+        <div class="avatar-img" aria-hidden="true">{{ request.user.username|first|upper }}</div>
+        <div class="avatar-status online"></div>
+      </div>
+      <!-- Avatar Dropdown -->
+      <div class="avatar-dropdown" id="avatar-dropdown" aria-label="User menu" hidden>
+        <div class="avatar-dropdown-header">
+          <div class="avatar-dropdown-name">{{ request.user.username }}</div>
+          <div class="avatar-dropdown-email">{{ request.user.email }}</div>
+        </div>
+        <div class="avatar-dropdown-divider"></div>
+        <a href="{% url 'accounts:profile' %}" class="avatar-dropdown-item">⚙️ Profile Settings</a>
+        <a href="{% url 'accounts:pricing' %}" class="avatar-dropdown-item">⬆️ Upgrade Plan</a>
+        {% if request.user.is_staff %}
+          <a href="{% url 'admin_panel:dashboard' %}" class="avatar-dropdown-item">🔧 Admin Panel</a>
+        {% endif %}
+        <div class="avatar-dropdown-divider"></div>
+        <a href="{% url 'accounts:logout' %}" class="avatar-dropdown-item avatar-dropdown-logout">🚪 Sign Out</a>
+      </div>
+    {% else %}
+      <a href="{% url 'accounts:login' %}" class="btn btn-secondary btn-sm">Sign In</a>
+      <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm">Get Started</a>
+    {% endif %}
+
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open mobile menu" aria-expanded="false" aria-controls="mobile-drawer">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Drawer -->
+<div class="mobile-drawer" id="mobile-drawer" aria-hidden="true" role="dialog" aria-label="Mobile navigation">
+  <div class="mobile-drawer-inner">
+    {% if request.user.is_authenticated %}
+      <a href="{% url 'signals:dashboard' %}" class="mobile-nav-link">📊 Dashboard</a>
+      <a href="{% url 'signals:signal_list' %}" class="mobile-nav-link">⚡ AI Signals</a>
+      <a href="{% url 'analytics:dashboard' %}" class="mobile-nav-link">📈 Analytics</a>
+      <a href="{% url 'backtesting:backtest' %}" class="mobile-nav-link">🔬 Backtesting</a>
+      <a href="{% url 'journal:list' %}" class="mobile-nav-link">📝 Journal</a>
+    {% endif %}
+    <a href="{% url 'accounts:pricing' %}" class="mobile-nav-link">💎 Pricing</a>
+    {% if request.user.is_authenticated %}
+      <div class="mobile-drawer-divider"></div>
+      <a href="{% url 'accounts:logout' %}" class="mobile-nav-link">🚪 Sign Out</a>
+    {% else %}
+      <a href="{% url 'accounts:login' %}" class="mobile-nav-link">Sign In</a>
+      <a href="{% url 'accounts:register' %}" class="mobile-nav-link mobile-nav-cta">Get Started Free</a>
+    {% endif %}
+  </div>
+</div>
+<div class="mobile-overlay" id="mobile-overlay" aria-hidden="true"></div>
+
+<!-- Django Messages -->
+{% if messages %}
+<div class="messages-container" role="alert" aria-live="polite">
+  {% for message in messages %}
+  <div class="alert-msg alert-{{ message.tags }}" data-auto-dismiss="4000">
+    {{ message }}
+    <button class="alert-close" aria-label="Close">&times;</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Page Content -->
+<main id="main-content" role="main">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- Footer -->
+<footer class="footer" role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="nav-title" aria-label="ForexAI Pro">ForexAI<span class="nav-title-pro">Pro</span></span>
+      <p class="footer-tagline">AI-powered forex intelligence for every trader</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4 class="footer-col-title">Platform</h4>
+        <a href="{% url 'signals:dashboard' %}" class="footer-link">Dashboard</a>
+        <a href="{% url 'signals:signal_list' %}" class="footer-link">AI Signals</a>
+        <a href="{% url 'analytics:dashboard' %}" class="footer-link">Analytics</a>
+        <a href="{% url 'backtesting:backtest' %}" class="footer-link">Backtesting</a>
+      </div>
+      <div class="footer-col">
+        <h4 class="footer-col-title">Account</h4>
+        <a href="{% url 'accounts:pricing' %}" class="footer-link">Pricing</a>
+        <a href="{% url 'accounts:register' %}" class="footer-link">Sign Up Free</a>
+        <a href="{% url 'accounts:login' %}" class="footer-link">Login</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 ForexAI Pro. <strong>Risk Disclaimer:</strong> Forex trading involves significant risk. Past performance does not guarantee future results. This platform provides information only — not financial advice.</p>
+  </div>
+</footer>
+
+<!-- Toast Container -->
+<div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
+
+<script src="{% static 'js/app.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

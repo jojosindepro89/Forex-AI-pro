@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Sign In{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card card glass-panel">
+    <div class="auth-logo" aria-hidden="true">
+      <svg width="48" height="48" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="9" fill="url(#lg)"/><path d="M9 23L16 13L21 18L28 9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="28" cy="9" r="3" fill="#00f5a0"/><defs><linearGradient id="lg" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse"><stop stop-color="#0f3460"/><stop offset="1" stop-color="#533483"/></linearGradient></defs></svg>
+    </div>
+    <h1 class="auth-title">Welcome back</h1>
+    <p class="auth-subtitle">Sign in to your ForexAI Pro account</p>
+
+    <form method="post" novalidate class="auth-form" id="login-form">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label" for="id_username">Username</label>
+        {{ form.username }}
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="id_password">Password</label>
+        {{ form.password }}
+      </div>
+      {% if form.non_field_errors %}
+      <div class="alert-msg alert-error" role="alert">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
+      <button type="submit" class="btn btn-primary btn-block btn-lg mt-4" id="login-submit-btn">Sign In</button>
+    </form>
+    <p class="auth-footer">Don't have an account? <a href="{% url 'accounts:register' %}" class="auth-link">Create one free</a></p>
+  </div>
+</div>
+{% endblock %}

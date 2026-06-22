@@ -1,0 +1,1034 @@
+{% extends 'base.html' %}
+{% block title %}{{ pair }} AI Signal Analysis{% endblock %}
+{% block content %}
+<div class="page-inner">
+  <div class="breadcrumb">
+    <a href="{% url 'signals:dashboard' %}">Dashboard</a>
+    <span class="breadcrumb-sep">/</span>
+    <a href="{% url 'signals:signal_list' %}">Signals</a>
+    <span class="breadcrumb-sep">/</span>
+    <span>{{ pair }}</span>
+  </div>
+
+  {% if signal %}
+  <div class="signal-detail-header">
+    <div>
+      <h1 class="page-title">{{ pair }}</h1>
+      <p class="page-subtitle">AI Intelligence Report · Live quotes & technical indicators · 
+        <span id="market-status-indicator">
+          {% if market_active %}
+            <span class="live-indicator"><span class="live-dot" aria-hidden="true"></span>Market Open</span>
+          {% else %}
+            <span class="live-indicator closed" style="color: var(--text-muted);"><span class="live-dot" style="background-color: var(--text-muted);" aria-hidden="true"></span>Market Closed (Weekend Sim)</span>
+          {% endif %}
+        </span>
+      </p>
+    </div>
+    <div class="flex items-center gap-4">
+      <span class="signal-badge {{ signal.signal_type|lower }}" style="font-size: 1.1rem; padding: 12px 24px;">
+        <span class="signal-dot" aria-hidden="true"></span>{{ signal.signal_type }}
+      </span>
+    </div>
+  </div>
+
+  <div class="signal-detail-grid">
+    <!-- Main Column -->
+    <div class="flex flex-col gap-6">
+      
+      <!-- Interactive Price Chart Card -->
+      <div class="card p-4">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="section-title" style="margin-bottom: 0;">Interactive Price Chart (1H)</h2>
+          <div class="flex gap-2">
+            <span id="sim-alert-badge" class="indicator-pill" style="border-color: oklch(70% 0.15 70); color: oklch(70% 0.15 70); font-weight: 700; display: {% if not market_active %}inline-flex{% else %}none{% endif %};">
+              ⚠️ SIMULATION ACTIVE
+            </span>
+            <span class="indicator-pill" style="border-color: var(--brand-primary); color: var(--brand-primary); font-weight: 700;">
+              {% if signal.signal_type == 'BUY' %}🟢 BULLISH BIAS{% elif signal.signal_type == 'SELL' %}🔴 BEARISH BIAS{% else %}⚪ NEUTRAL{% endif %}
+            </span>
+          </div>
+        </div>
+        <div id="chart-container" style="width: 100%; height: 350px; border-radius: var(--radius-md); overflow: hidden; position: relative;"></div>
+      </div>
+      
+      <!-- Trade Levels Card -->
+      <div class="card">
+        <h2 class="section-title">AI Trade Plan</h2>
+        <div class="grid grid-3 gap-4 mt-4">
+          <div class="backtest-metric" style="border: 1px solid var(--bg-border);">
+            <div class="backtest-metric-value font-mono" style="color: var(--text-primary);">{{ signal.entry_price|floatformat:decimals }}</div>
+            <div class="backtest-metric-label">Suggested Entry</div>
+          </div>
+          <div class="backtest-metric" style="border: 1px solid var(--signal-sell-bg); border-radius: var(--radius-md);">
+            <div class="backtest-metric-value font-mono text-sell">{{ signal.stop_loss|floatformat:decimals }}</div>
+            <div class="backtest-metric-label">Stop Loss (SL)</div>
+          </div>
+          <div class="backtest-metric" style="border: 1px solid var(--signal-buy-bg); border-radius: var(--radius-md);">
+            <div class="backtest-metric-value font-mono text-buy">{{ signal.take_profit|floatformat:decimals }}</div>
+            <div class="backtest-metric-label">Take Profit (TP)</div>
+          </div>
+        </div>
+        
+        <div class="mt-4 p-4 rounded" style="background: var(--bg-elevated);">
+          <div class="flex justify-between text-sm">
+            <span class="text-muted">Risk/Reward Ratio</span>
+            <span class="font-bold font-mono">1:2 (25 Pips SL / 50 Pips TP)</span>
+          </div>
+          <div class="divider"></div>
+          <div class="flex justify-between text-sm">
+            <span class="text-muted">Confidence Score</span>
+            <span class="font-bold {% if signal.confidence >= 70 %}text-buy{% else %}text-sell{% endif %}">{{ signal.confidence }}%</span>
+          </div>
+          <div class="confidence-bar mt-2" style="height: 10px;" role="meter" aria-valuenow="{{ signal.confidence }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="confidence-fill {% if signal.confidence >= 70 %}high{% elif signal.confidence >= 50 %}medium{% else %}low{% endif %}" style="width: {{ signal.confidence }}%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Explanation -->
+      <div class="card">
+        <h2 class="section-title">AI Trade Analysis & Rationale</h2>
+        <div class="ai-explanation">
+          <div class="ai-badge" aria-hidden="true" style="margin-bottom: var(--space-3);">🤖 ForexAI Engine</div>
+          <p class="text-primary font-semibold" style="font-size: 1.05rem; line-height: 1.6;">{{ signal.ai_explanation }}</p>
+          <div class="divider"></div>
+          <p class="text-secondary text-sm" style="line-height: 1.7;">{{ signal.reasoning }}</p>
+        </div>
+      </div>
+
+      <!-- Moving Averages Table -->
+      <div class="card">
+        <h2 class="section-title">Moving Averages (EMA & SMA)</h2>
+        <p class="text-xs text-muted mb-4">Calculated over the last 100 hourly periods to establish trend bias.</p>
+        <div class="data-table-wrap">
+          <table class="data-table" aria-label="Moving averages status">
+            <thead>
+              <tr>
+                <th>Period</th>
+                <th>Simple (SMA)</th>
+                <th>Bias</th>
+                <th>Exponential (EMA)</th>
+                <th>Bias</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-bold">20</td>
+                <td class="mono" id="ma-sma20">{{ signal.sma20|floatformat:decimals }}</td>
+                <td>
+                  <span class="stat-delta {% if signal.price > signal.sma20 %}up{% else %}down{% endif %}" id="ma-sma20-bias">
+                    {% if signal.price > signal.sma20 %}Bullish{% else %}Bearish{% endif %}
+                  </span>
+                </td>
+                <td class="mono" id="ma-ema20">{{ signal.ema20|floatformat:decimals }}</td>
+                <td>
+                  <span class="stat-delta {% if signal.price > signal.ema20 %}up{% else %}down{% endif %}" id="ma-ema20-bias">
+                    {% if signal.price > signal.ema20 %}Bullish{% else %}Bearish{% endif %}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="font-bold">50</td>
+                <td class="mono" id="ma-sma50">{{ signal.sma50|floatformat:decimals }}</td>
+                <td>
+                  <span class="stat-delta {% if signal.price > signal.sma50 %}up{% else %}down{% endif %}" id="ma-sma50-bias">
+                    {% if signal.price > signal.sma50 %}Bullish{% else %}Bearish{% endif %}
+                  </span>
+                </td>
+                <td class="mono" id="ma-ema50">{{ signal.ema50|floatformat:decimals }}</td>
+                <td>
+                  <span class="stat-delta {% if signal.price > signal.ema50 %}up{% else %}down{% endif %}" id="ma-ema50-bias">
+                    {% if signal.price > signal.ema50 %}Bullish{% else %}Bearish{% endif %}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="font-bold">100</td>
+                <td class="mono" id="ma-sma100">{{ signal.sma100|floatformat:decimals }}</td>
+                <td>
+                  <span class="stat-delta {% if signal.price > signal.sma100 %}up{% else %}down{% endif %}" id="ma-sma100-bias">
+                    {% if signal.price > signal.sma100 %}Bullish{% else %}Bearish{% endif %}
+                  </span>
+                </td>
+                <td class="mono" id="ma-ema100">{{ signal.ema100|floatformat:decimals }}</td>
+                <td>
+                  <span class="stat-delta {% if signal.price > signal.ema100 %}up{% else %}down{% endif %}" id="ma-ema100-bias">
+                    {% if signal.price > signal.ema100 %}Bullish{% else %}Bearish{% endif %}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="font-bold">200</td>
+                <td class="mono" id="ma-sma200">{{ signal.sma200|floatformat:decimals }}</td>
+                <td>
+                  <span class="stat-delta {% if signal.price > signal.sma200 %}up{% else %}down{% endif %}" id="ma-sma200-bias">
+                    {% if signal.price > signal.sma200 %}Bullish{% else %}Bearish{% endif %}
+                  </span>
+                </td>
+                <td class="mono" id="ma-ema200">{{ signal.ema200|floatformat:decimals }}</td>
+                <td>
+                  <span class="stat-delta {% if signal.price > signal.ema200 %}up{% else %}down{% endif %}" id="ma-ema200-bias">
+                    {% if signal.price > signal.ema200 %}Bullish{% else %}Bearish{% endif %}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pivot Points Table -->
+      <div class="card">
+        <h2 class="section-title">Daily Pivot Points</h2>
+        <p class="text-xs text-muted mb-4 font-sans">Key intraday trading levels to identify trend direction and price targets.</p>
+        <div class="grid grid-2 gap-4">
+          <!-- Classic pivots -->
+          <div class="p-4 rounded border" style="background: var(--bg-elevated);">
+            <h3 class="font-bold text-sm mb-3">Classic Pivot Points</h3>
+            <div class="data-table-wrap">
+              <table class="data-table" style="background: transparent;" aria-label="Classic pivot points">
+                <tbody>
+                  <tr><td class="font-bold text-xs text-sell">R3</td><td class="mono text-right" id="pivot-classic-r3">{{ signal.pivots.classic.r3|floatformat:decimals }}</td></tr>
+                  <tr><td class="font-bold text-xs text-sell">R2</td><td class="mono text-right" id="pivot-classic-r2">{{ signal.pivots.classic.r2|floatformat:decimals }}</td></tr>
+                  <tr><td class="font-bold text-xs text-sell">R1</td><td class="mono text-right" id="pivot-classic-r1">{{ signal.pivots.classic.r1|floatformat:decimals }}</td></tr>
+                  <tr style="background: oklch(55% 0.22 280 / 0.1);"><td class="font-bold text-xs">PIVOT (PP)</td><td class="mono text-right font-bold" id="pivot-classic-pp">{{ signal.pivots.classic.pp|floatformat:decimals }}</td></tr>
+                  <tr><td class="font-bold text-xs text-buy">S1</td><td class="mono text-right" id="pivot-classic-s1">{{ signal.pivots.classic.s1|floatformat:decimals }}</td></tr>
+                  <tr><td class="font-bold text-xs text-buy">S2</td><td class="mono text-right" id="pivot-classic-s2">{{ signal.pivots.classic.s2|floatformat:decimals }}</td></tr>
+                  <tr><td class="font-bold text-xs text-buy">S3</td><td class="mono text-right" id="pivot-classic-s3">{{ signal.pivots.classic.s3|floatformat:decimals }}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- Fibonacci pivots -->
+          <div class="p-4 rounded border" style="background: var(--bg-elevated);">
+            <h3 class="font-bold text-sm mb-3">Fibonacci Pivot Points</h3>
+            <div class="data-table-wrap">
+              <table class="data-table" style="background: transparent;" aria-label="Fibonacci pivot points">
+                <tbody>
+                  <tr><td class="font-bold text-xs text-sell">R3 (1.000)</td><td class="mono text-right" id="pivot-fib-r3">{{ signal.pivots.fibonacci.r3|floatformat:decimals }}</td></tr>
+                  <tr><td class="font-bold text-xs text-sell">R2 (0.618)</td><td class="mono text-right" id="pivot-fib-r2">{{ signal.pivots.fibonacci.r2|floatformat:decimals }}</td></tr>
+                  <tr><td class="font-bold text-xs text-sell">R1 (0.382)</td><td class="mono text-right" id="pivot-fib-r1">{{ signal.pivots.fibonacci.r1|floatformat:decimals }}</td></tr>
+                  <tr style="background: oklch(55% 0.22 280 / 0.1);"><td class="font-bold text-xs">PIVOT (PP)</td><td class="mono text-right font-bold" id="pivot-fib-pp">{{ signal.pivots.fibonacci.pp|floatformat:decimals }}</td></tr>
+                  <tr><td class="font-bold text-xs text-buy">S1 (0.382)</td><td class="mono text-right" id="pivot-fib-s1">{{ signal.pivots.fibonacci.s1|floatformat:decimals }}</td></tr>
+                  <tr><td class="font-bold text-xs text-buy">S2 (0.618)</td><td class="mono text-right" id="pivot-fib-s2">{{ signal.pivots.fibonacci.s2|floatformat:decimals }}</td></tr>
+                  <tr><td class="font-bold text-xs text-buy">S3 (1.000)</td><td class="mono text-right" id="pivot-fib-s3">{{ signal.pivots.fibonacci.s3|floatformat:decimals }}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Column -->
+    <div class="flex flex-col gap-6">
+      
+      <!-- Oscillators Card -->
+      <div class="card">
+        <h2 class="section-title">Oscillators</h2>
+        
+        <!-- RSI Section -->
+        <div class="mt-4">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-sm font-semibold">RSI (14)</span>
+            <span class="font-mono font-bold text-sm {% if signal.rsi >= 70 %}text-sell{% elif signal.rsi <= 30 %}text-buy{% else %}text-hold{% endif %}" id="osc-rsi-value">{{ signal.rsi|floatformat:1 }}</span>
+          </div>
+          
+          <div class="relative" style="height: 24px; background: var(--bg-elevated); border-radius: var(--radius-sm); border: 1px solid var(--bg-border); overflow: hidden; display: flex; align-items: center;">
+            <!-- Oversold zone -->
+            <div style="position: absolute; left: 0; width: 30%; height: 100%; background: oklch(68% 0.20 155 / 0.08); border-right: 1px dashed oklch(68% 0.20 155 / 0.25);"></div>
+            <!-- Overbought zone -->
+            <div style="position: absolute; right: 0; width: 30%; height: 100%; background: oklch(62% 0.22 25 / 0.08); border-left: 1px dashed oklch(62% 0.22 25 / 0.25);"></div>
+            <!-- Pointer line -->
+            <div style="position: absolute; left: {{ signal.rsi }}%; transform: translateX(-50%); width: 4px; height: 100%; background: var(--brand-primary); box-shadow: 0 0 8px var(--brand-primary); z-index: 10;" id="osc-rsi-pointer"></div>
+            
+            <div class="w-full flex justify-between px-2 text-muted" style="font-size: 9px; z-index: 2; font-weight: 700; text-transform: uppercase;">
+              <span>Oversold</span>
+              <span>Neutral</span>
+              <span>Overbought</span>
+            </div>
+          </div>
+          <div class="flex justify-between text-muted" style="font-size: 9px; margin-top: 4px;">
+            <span>0</span>
+            <span>30</span>
+            <span>50</span>
+            <span>70</span>
+            <span>100</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- MACD Section -->
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-semibold">MACD (12, 26, 9)</span>
+            <span class="font-mono text-xs {% if signal.macd > signal.macd_signal %}text-buy{% else %}text-sell{% endif %}" id="osc-macd-bias">
+              {% if signal.macd > signal.macd_signal %}Bullish Cross{% else %}Bearish Cross{% endif %}
+            </span>
+          </div>
+          <div class="p-3 rounded font-mono text-xs flex flex-col gap-2" style="background: var(--bg-elevated); border: 1px solid var(--bg-border);">
+            <div class="flex justify-between">
+              <span class="text-muted">MACD Line</span>
+              <span class="font-bold text-primary" id="osc-macd-line">{{ signal.macd|floatformat:5 }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-muted">Signal Line</span>
+              <span class="font-bold text-primary" id="osc-macd-signal">{{ signal.macd_signal|floatformat:5 }}</span>
+            </div>
+            <div class="divider" style="margin: var(--space-1) 0;"></div>
+            <div class="flex justify-between">
+              <span class="text-muted">Histogram</span>
+              <span class="font-bold {% if signal.macd > signal.macd_signal %}text-buy{% else %}text-sell{% endif %}" id="osc-macd-hist">
+                {% if signal.macd > signal.macd_signal %}+{% endif %}{{ signal.macd_hist|floatformat:5 }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Bollinger Bands -->
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-semibold">Bollinger Bands (20, 2)</span>
+            <span class="text-xs text-muted">Price vs Volatility</span>
+          </div>
+          <div class="p-3 rounded font-mono text-xs flex flex-col gap-2" style="background: var(--bg-elevated); border: 1px solid var(--bg-border);">
+            <div class="flex justify-between text-sell">
+              <span>Upper Band</span>
+              <span class="font-semibold" id="osc-bb-upper">{{ signal.bb_upper|floatformat:decimals }}</span>
+            </div>
+            <div class="flex justify-between text-hold">
+              <span>Basis (SMA20)</span>
+              <span class="font-semibold" id="osc-bb-middle">{{ signal.bb_middle|floatformat:decimals }}</span>
+            </div>
+            <div class="flex justify-between text-buy">
+              <span>Lower Band</span>
+              <span class="font-semibold" id="osc-bb-lower">{{ signal.bb_lower|floatformat:decimals }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Support & Resistance Price Ladder -->
+      <div class="card">
+        <h2 class="section-title">Price Levels Ladder</h2>
+        <p class="text-xs text-muted mb-3">Visual swing points identified by local pivots.</p>
+        <div class="flex flex-col gap-1.5 font-mono text-xs">
+          <!-- R3 -->
+          {% if signal.pivots.classic.r3 %}
+          <div class="flex items-center justify-between p-2 rounded" style="background: var(--signal-sell-bg); opacity: 0.7;">
+            <span class="font-bold text-sell">Resistance R3</span>
+            <span id="ladder-r3">{{ signal.pivots.classic.r3|floatformat:decimals }}</span>
+          </div>
+          {% endif %}
+          
+          <!-- R2 -->
+          {% if signal.pivots.classic.r2 %}
+          <div class="flex items-center justify-between p-2 rounded" style="background: var(--signal-sell-bg); opacity: 0.85;">
+            <span class="font-bold text-sell">Resistance R2</span>
+            <span id="ladder-r2">{{ signal.pivots.classic.r2|floatformat:decimals }}</span>
+          </div>
+          {% endif %}
+
+          <!-- R1 / Swing Resistances -->
+          {% for res in signal.resistances %}
+          <div class="flex items-center justify-between p-2.5 rounded border" style="border-color: var(--signal-sell); background: var(--signal-sell-bg);">
+            <span class="font-bold text-sell">Swing Resistance (R1)</span>
+            <span class="font-bold" id="ladder-r1">{{ res|floatformat:decimals }}</span>
+          </div>
+          {% endfor %}
+
+          <!-- Current Price (Target center) -->
+          <div class="flex items-center justify-between p-3 rounded" style="background: var(--grad-brand); color: #fff; box-shadow: var(--shadow-glow); margin: 4px 0;">
+            <span class="font-bold uppercase tracking-wider" style="font-size: 10px;">Market Price</span>
+            <span class="font-bold" style="font-size: 1.05rem;" id="ladder-current-price">{{ signal.price|floatformat:decimals }}</span>
+          </div>
+
+          <!-- Swing Supports -->
+          {% for sup in signal.supports %}
+          <div class="flex items-center justify-between p-2.5 rounded border" style="border-color: var(--signal-buy); background: var(--signal-buy-bg);">
+            <span class="font-bold text-buy">Swing Support (S1)</span>
+            <span class="font-bold" id="ladder-s1">{{ sup|floatformat:decimals }}</span>
+          </div>
+          {% endfor %}
+
+          <!-- S2 -->
+          {% if signal.pivots.classic.s2 %}
+          <div class="flex items-center justify-between p-2 rounded" style="background: var(--signal-buy-bg); opacity: 0.85;">
+            <span class="font-bold text-buy">Support S2</span>
+            <span id="ladder-s2">{{ signal.pivots.classic.s2|floatformat:decimals }}</span>
+          </div>
+          {% endif %}
+
+          <!-- S3 -->
+          {% if signal.pivots.classic.s3 %}
+          <div class="flex items-center justify-between p-2 rounded" style="background: var(--signal-buy-bg); opacity: 0.7;">
+            <span class="font-bold text-buy">Support S3</span>
+            <span id="ladder-s3">{{ signal.pivots.classic.s3|floatformat:decimals }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Recent OHLCV Candles -->
+      {% if ohlcv %}
+      <div class="card">
+        <h2 class="section-title">Recent 1H Candles</h2>
+        <div class="data-table-wrap mt-3">
+          <table class="data-table" aria-label="Hourly candle history">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Open</th>
+                <th>Close</th>
+                <th>High/Low</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for candle in ohlcv|slice:":10" %}
+              <tr>
+                <td class="mono text-xs">{{ candle.datetime|slice:"11:16" }}</td>
+                <td class="mono text-xs">{{ candle.open|floatformat:decimals }}</td>
+                <td class="mono text-xs {% if candle.close >= candle.open %}pnl-positive{% else %}pnl-negative{% endif %}">{{ candle.close|floatformat:decimals }}</td>
+                <td class="mono text-xs text-muted" style="line-height: 1.2;">
+                  <span class="text-buy">{{ candle.high|floatformat:decimals }}</span><br/>
+                  <span class="text-sell">{{ candle.low|floatformat:decimals }}</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- MetaTrader-Style Execution Panel -->
+      <div class="card">
+        <h2 class="section-title">Instant Market Execution</h2>
+        <p class="text-xs text-muted mb-4">Execute instant simulated positions in your demo trading journal.</p>
+        
+        <form id="quick-trade-form" class="flex flex-col gap-4" novalidate style="margin-top: var(--space-3);">
+          {% csrf_token %}
+          
+          <div class="form-row">
+            <!-- Lot Size -->
+            <div class="form-group">
+              <label for="trade-lot-size" class="form-label" style="font-size: var(--text-xs); color: var(--text-muted); font-weight: 600;">Lot Size (Volume)</label>
+              <input type="number" id="trade-lot-size" class="form-input font-mono" value="0.01" step="0.01" min="0.01" max="10.00" required />
+            </div>
+            
+            <!-- Leverage -->
+            <div class="form-group">
+              <label for="trade-leverage" class="form-label" style="font-size: var(--text-xs); color: var(--text-muted); font-weight: 600;">Leverage</label>
+              <input type="number" id="trade-leverage" class="form-input font-mono" value="100" step="1" min="1" max="1000" required />
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <!-- Stop Loss -->
+            <div class="form-group">
+              <label for="trade-stop-loss" class="form-label" style="font-size: var(--text-xs); color: var(--signal-sell); font-weight: 600;">Stop Loss (SL)</label>
+              <input type="number" id="trade-stop-loss" class="form-input font-mono" value="{{ signal.stop_loss|floatformat:decimals }}" step="{% if decimals == 2 %}0.01{% elif decimals == 3 %}0.001{% else %}0.00001{% endif %}" placeholder="None" style="border-color: var(--signal-sell-bg);" />
+            </div>
+            
+            <!-- Take Profit -->
+            <div class="form-group">
+              <label for="trade-take-profit" class="form-label" style="font-size: var(--text-xs); color: var(--signal-buy); font-weight: 600;">Take Profit (TP)</label>
+              <input type="number" id="trade-take-profit" class="form-input font-mono" value="{{ signal.take_profit|floatformat:decimals }}" step="{% if decimals == 2 %}0.01{% elif decimals == 3 %}0.001{% else %}0.00001{% endif %}" placeholder="None" style="border-color: var(--signal-buy-bg);" />
+            </div>
+          </div>
+
+          <!-- Margin/Invested Amount -->
+          <div class="form-group">
+            <label for="trade-invested-amount" class="form-label" style="font-size: var(--text-xs); color: var(--text-muted); font-weight: 600;">Margin / Invested Amount ($)</label>
+            <input type="number" id="trade-invested-amount" class="form-input font-mono" value="15.00" step="1.00" min="1.00" required />
+          </div>
+          
+          <!-- MT5 Buy/Sell Buttons -->
+          <div class="grid grid-2 gap-3 mt-2">
+            <button type="button" id="btn-execute-short" class="btn btn-sell btn-block flex flex-col" style="padding: 12px 16px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; gap: 2px;">
+              <span style="font-weight: 800; font-size: 13px; tracking-wider">SELL</span>
+              <span id="btn-sell-price" class="font-mono text-xs" style="opacity: 0.85;">{{ signal.price|floatformat:decimals }}</span>
+            </button>
+            
+            <button type="button" id="btn-execute-long" class="btn btn-buy btn-block flex flex-col" style="padding: 12px 16px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; gap: 2px;">
+              <span style="font-weight: 800; font-size: 13px; tracking-wider">BUY</span>
+              <span id="btn-buy-price" class="font-mono text-xs" style="opacity: 0.85;">{{ signal.price|floatformat:decimals }}</span>
+            </button>
+          </div>
+        </form>
+        
+        <div class="divider"></div>
+        <div class="flex flex-col gap-3">
+          <a href="{% url 'journal:create' %}?pair={{ pair|urlencode }}" class="btn btn-secondary btn-block">📝 Manual Log Entry</a>
+          <a href="{% url 'signals:signal_list' %}" class="btn btn-ghost btn-block" style="border: 1px dashed var(--bg-border);">← Back to Signals</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon" aria-hidden="true">❌</div>
+    <div class="empty-state-title">Could not generate analysis for {{ pair }}</div>
+    <p class="text-muted">The market data endpoint may be temporarily unavailable. Please try again shortly.</p>
+    <a href="{% url 'signals:signal_list' %}" class="btn btn-secondary mt-4">Back to Signals</a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- TradingView Lightweight Charts Library (Multiple CDN links for redundancy) -->
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+const currentPair = "{{ pair }}";
+const decimals = currentPair.includes('JPY') ? 3 : (currentPair.includes('XAU') ? 2 : 5);
+
+// Custom fail-safe SVG Candlestick Chart Renderer
+function renderSVGChart(container, data, entry, sl, tp) {
+    container.innerHTML = '';
+    const width = container.clientWidth || 600;
+    const height = container.clientHeight || 350;
+    
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:var(--text-sm);">No chart data available</div>';
+        return;
+    }
+
+    // Keep only the last 35 candles for bold, clear presentation in the static fallback SVG
+    const displayData = data.slice(-35);
+
+    // Determine price limits
+    let prices = displayData.flatMap(d => [d.open, d.high, d.low, d.close]);
+    if (entry) prices.push(entry);
+    if (sl) prices.push(sl);
+    if (tp) prices.push(tp);
+
+    let minPrice = Math.min(...prices);
+    let maxPrice = Math.max(...prices);
+    const range = maxPrice - minPrice || 0.01;
+    minPrice -= range * 0.05;
+    maxPrice += range * 0.05;
+    const priceRange = maxPrice - minPrice;
+
+    // Create SVG
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "100%");
+    svg.setAttribute("height", "100%");
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.style.display = "block";
+    svg.style.background = "#081627";
+
+    const chartWidth = width - 85;
+    const chartHeight = height - 30;
+
+    const getY = (val) => chartHeight - ((val - minPrice) / priceRange) * chartHeight + 10;
+    
+    // Draw Gridlines
+    const gridCount = 5;
+    for (let i = 0; i <= gridCount; i++) {
+        const val = minPrice + (priceRange * i) / gridCount;
+        const y = getY(val);
+        
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", 5);
+        line.setAttribute("y1", y);
+        line.setAttribute("x2", chartWidth);
+        line.setAttribute("y2", y);
+        line.setAttribute("stroke", "#132a48");
+        line.setAttribute("stroke-width", "0.5");
+        line.setAttribute("stroke-dasharray", "2,2");
+        svg.appendChild(line);
+
+        const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lbl.setAttribute("x", chartWidth + 5);
+        lbl.setAttribute("y", y + 4);
+        lbl.setAttribute("fill", "#849ab8");
+        lbl.setAttribute("font-size", "9px");
+        lbl.setAttribute("font-family", "monospace");
+        lbl.textContent = val.toFixed(decimals);
+        svg.appendChild(lbl);
+    }
+
+    // Draw Overlay Lines (Entry, SL, TP)
+    const overlays = [
+        { price: entry, label: 'ENTRY', color: '#8b5cf6' },
+        { price: tp, label: 'TP Target', color: '#10b981' },
+        { price: sl, label: 'SL Limit', color: '#ef4444' }
+    ];
+
+    overlays.forEach(o => {
+        if (!o.price) return;
+        const y = getY(o.price);
+        
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", 5);
+        line.setAttribute("y1", y);
+        line.setAttribute("x2", chartWidth);
+        line.setAttribute("y2", y);
+        line.setAttribute("stroke", o.color);
+        line.setAttribute("stroke-width", "1.5");
+        line.setAttribute("stroke-dasharray", "4,4");
+        svg.appendChild(line);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", chartWidth - 65);
+        text.setAttribute("y", y - 4);
+        text.setAttribute("fill", o.color);
+        text.setAttribute("font-size", "8px");
+        text.setAttribute("font-weight", "bold");
+        text.setAttribute("font-family", "sans-serif");
+        text.textContent = o.label;
+        svg.appendChild(text);
+    });
+
+    // Draw Candlesticks
+    const candleCount = displayData.length;
+    const blockWidth = chartWidth / candleCount;
+    const bodyWidth = blockWidth * 0.7;
+    const offset = blockWidth * 0.15;
+
+    displayData.forEach((d, idx) => {
+        const x = idx * blockWidth + offset + bodyWidth / 2;
+        const yOpen = getY(d.open);
+        const yClose = getY(d.close);
+        const yHigh = getY(d.high);
+        const yLow = getY(d.low);
+        const isBullish = d.close >= d.open;
+        const color = isBullish ? '#3df270' : '#ff3b30';
+
+        // Wick Line
+        const wick = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        wick.setAttribute("x1", x);
+        wick.setAttribute("y1", yHigh);
+        wick.setAttribute("x2", x);
+        wick.setAttribute("y2", yLow);
+        wick.setAttribute("stroke", color);
+        wick.setAttribute("stroke-width", "1.2");
+        svg.appendChild(wick);
+
+        // Body Rect
+        const body = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        body.setAttribute("x", x - bodyWidth / 2);
+        body.setAttribute("y", Math.min(yOpen, yClose));
+        body.setAttribute("width", bodyWidth);
+        body.setAttribute("height", Math.max(1, Math.abs(yOpen - yClose)));
+        body.setAttribute("fill", color);
+        svg.appendChild(body);
+    });
+
+    container.appendChild(svg);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const chartContainer = document.getElementById('chart-container');
+    if (!chartContainer) return;
+
+    // Load and sort context ohlcv candles
+    const rawData = [
+        {% for candle in ohlcv %}
+        {
+            time: Date.parse("{{ candle.datetime }}".replace(" ", "T")) / 1000,
+            open: {{ candle.open }},
+            high: {{ candle.high }},
+            low: {{ candle.low }},
+            close: {{ candle.close }}
+        },
+        {% endfor %}
+    ];
+
+    const seen = new Set();
+    const chartData = [];
+    for (const d of rawData) {
+        if (!isNaN(d.time) && !seen.has(d.time)) {
+            seen.add(d.time);
+            chartData.push(d);
+        }
+    }
+    chartData.sort((a, b) => a.time - b.time);
+
+    let candlestickSeries = null;
+    let chart = null;
+
+    // Try rendering TradingView chart
+    try {
+        if (typeof LightweightCharts === 'undefined') {
+            throw new Error("LightweightCharts library is not loaded");
+        }
+
+        const getThemeMode = () => {
+            return document.documentElement.getAttribute('data-theme') === 'light' || 
+                   document.body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        };
+
+        let theme = getThemeMode();
+        const isLight = theme === 'light';
+        
+        chart = LightweightCharts.createChart(chartContainer, {
+            layout: {
+                background: { type: 'solid', color: '#081627' },
+                textColor: '#849ab8',
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 11,
+            },
+            grid: {
+                vertLines: { color: '#132a48', style: LightweightCharts.LineStyle.Dashed },
+                horzLines: { color: '#132a48', style: LightweightCharts.LineStyle.Dashed },
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+                vertLine: {
+                    color: '#849ab8',
+                    width: 1,
+                    style: LightweightCharts.LineStyle.Dashed,
+                    labelBackgroundColor: '#0f3460',
+                },
+                horzLine: {
+                    color: '#849ab8',
+                    width: 1,
+                    style: LightweightCharts.LineStyle.Dashed,
+                    labelBackgroundColor: '#0f3460',
+                },
+            },
+            rightPriceScale: {
+                borderColor: '#132a48',
+                autoScale: true,
+                scaleMargins: { top: 0.15, bottom: 0.15 },
+            },
+            timeScale: {
+                borderColor: '#132a48',
+                timeVisible: true,
+                secondsVisible: false,
+                barSpacing: 12, // Bold candlestick bodies
+                minBarSpacing: 4,
+                rightOffset: 5, // Gap on the right like MetaTrader
+            },
+            handleScroll: {
+                mouseWheel: true,
+                pressedMouseButton: true,
+                horzTouchDrag: true,
+                vertTouchDrag: true,
+            },
+            handleScale: {
+                axisPressedMouseButton: true,
+                mouseWheel: true,
+                pinch: true,
+            },
+        });
+
+        candlestickSeries = chart.addCandlestickSeries({
+            upColor: '#3df270',
+            downColor: '#ff3b30',
+            borderVisible: false,
+            wickUpColor: '#3df270',
+            wickDownColor: '#ff3b30',
+        });
+
+        candlestickSeries.setData(chartData);
+
+        // Frame the last 35 candles to ensure the chart is bold and zoomable on load
+        if (chartData.length > 0) {
+            const visibleCount = Math.min(chartData.length, 35);
+            chart.timeScale().setVisibleLogicalRange({
+                from: chartData.length - visibleCount - 0.5,
+                to: chartData.length - 0.5,
+            });
+        }
+
+        // Target Overlays
+        candlestickSeries.createPriceLine({
+            price: {{ signal.entry_price }},
+            color: '#8b5cf6',
+            lineWidth: 2,
+            lineStyle: LightweightCharts.LineStyle.Dashed,
+            axisLabelVisible: true,
+            title: 'Entry Target',
+        });
+
+        candlestickSeries.createPriceLine({
+            price: {{ signal.take_profit }},
+            color: '#10b981',
+            lineWidth: 2,
+            lineStyle: LightweightCharts.LineStyle.Dotted,
+            axisLabelVisible: true,
+            title: 'Take Profit (TP)',
+        });
+
+        candlestickSeries.createPriceLine({
+            price: {{ signal.stop_loss }},
+            color: '#ef4444',
+            lineWidth: 2,
+            lineStyle: LightweightCharts.LineStyle.Dotted,
+            axisLabelVisible: true,
+            title: 'Stop Loss (SL)',
+        });
+
+        // Resize support
+        const resizeObserver = new ResizeObserver(() => {
+            const width = chartContainer.clientWidth;
+            const height = chartContainer.clientHeight || 350;
+            if (width > 0 && height > 0) {
+                chart.resize(width, height);
+            }
+        });
+        resizeObserver.observe(chartContainer);
+
+        // Theme switch listener removed to preserve the requested trading terminal style.
+
+    } catch (e) {
+        console.warn("Failed to initialize TradingView Lightweight Charts, falling back to SVG renderer:", e);
+        const drawSvg = () => {
+            renderSVGChart(chartContainer, chartData, {{ signal.entry_price }}, {{ signal.take_profit }}, {{ signal.stop_loss }});
+        };
+        drawSvg();
+        window.addEventListener('resize', drawSvg);
+    }
+
+    // ── 1-Second Price Polling Loop (Fast Ticks) ──────────────────────────
+    const pricePollInterval = setInterval(() => {
+        fetch('/api/prices/')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (!data || !data.prices) return;
+                
+                const currentPair = "{{ pair }}";
+                const price = parseFloat(data.prices[currentPair]);
+                if (isNaN(price)) return;
+                
+                // 1. Update the price ladder current price block
+                const priceLadderLabel = document.getElementById('ladder-current-price');
+                if (priceLadderLabel) {
+                    priceLadderLabel.textContent = price.toFixed(decimals);
+                    priceLadderLabel.classList.add('price-flash');
+                    setTimeout(() => priceLadderLabel.classList.remove('price-flash'), 600);
+                }
+
+                // Update quick execution buttons prices
+                const btnSellPrice = document.getElementById('btn-sell-price');
+                if (btnSellPrice) {
+                    btnSellPrice.textContent = price.toFixed(decimals);
+                }
+                const btnBuyPrice = document.getElementById('btn-buy-price');
+                if (btnBuyPrice) {
+                    btnBuyPrice.textContent = price.toFixed(decimals);
+                }
+
+                // 2. Update the chart's latest candle close
+                if (chartData.length > 0) {
+                    const lastBar = chartData[chartData.length - 1];
+                    lastBar.close = price;
+                    if (price > lastBar.high) lastBar.high = price;
+                    if (price < lastBar.low) lastBar.low = price;
+                    
+                    if (candlestickSeries && typeof LightweightCharts !== 'undefined') {
+                        candlestickSeries.update(lastBar);
+                    } else {
+                        renderSVGChart(chartContainer, chartData, {{ signal.entry_price }}, {{ signal.take_profit }}, {{ signal.stop_loss }});
+                    }
+                }
+
+                // 3. Update market status indicators and warning badge
+                const indicatorEl = document.getElementById('market-status-indicator');
+                if (indicatorEl && data.market_active !== undefined) {
+                    if (data.market_active) {
+                        indicatorEl.innerHTML = '<span class="live-indicator"><span class="live-dot" aria-hidden="true"></span>Market Open</span>';
+                    } else {
+                        indicatorEl.innerHTML = '<span class="live-indicator closed" style="color: var(--text-muted);"><span class="live-dot" style="background-color: var(--text-muted);" aria-hidden="true"></span>Market Closed (Weekend Sim)</span>';
+                    }
+                }
+
+                const simAlertEl = document.getElementById('sim-alert-badge');
+                if (simAlertEl && data.market_active !== undefined) {
+                    simAlertEl.style.display = data.market_active ? 'none' : 'inline-flex';
+                }
+            })
+            .catch(() => {});
+    }, 1000);
+
+    // ── 15-Second Signal/Indicators Polling Loop (Slow Updates) ───────────
+    const signalPollInterval = setInterval(() => {
+        const slug = "{{ pair }}".replace('/', '-').toLowerCase();
+        fetch(`/api/signal/${slug}/`)
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (!data) return;
+
+                const price = parseFloat(data.price);
+
+                // Update the RSI gauge value
+                if (data.rsi !== undefined && data.rsi !== null) {
+                    const rsiValEl = document.getElementById('osc-rsi-value');
+                    if (rsiValEl) {
+                        rsiValEl.textContent = parseFloat(data.rsi).toFixed(1);
+                    }
+                    const rsiPointer = document.getElementById('osc-rsi-pointer');
+                    if (rsiPointer) {
+                        rsiPointer.style.left = `${data.rsi}%`;
+                    }
+                }
+
+                // Update the MACD block
+                if (data.macd !== undefined && data.macd !== null) {
+                    const macdValEl = document.getElementById('osc-macd-line');
+                    if (macdValEl) macdValEl.textContent = parseFloat(data.macd).toFixed(5);
+                    
+                    const macdSigEl = document.getElementById('osc-macd-signal');
+                    if (macdSigEl) macdSigEl.textContent = parseFloat(data.macd_signal).toFixed(5);
+                    
+                    const macdHistEl = document.getElementById('osc-macd-hist');
+                    if (macdHistEl) {
+                        const hist = parseFloat(data.macd_hist);
+                        macdHistEl.textContent = (hist >= 0 ? '+' : '') + hist.toFixed(5);
+                        macdHistEl.className = 'font-bold ' + (hist >= 0 ? 'text-buy' : 'text-sell');
+                    }
+                    
+                    const macdBiasEl = document.getElementById('osc-macd-bias');
+                    if (macdBiasEl) {
+                        const isBullish = parseFloat(data.macd) > parseFloat(data.macd_signal);
+                        macdBiasEl.textContent = isBullish ? 'Bullish Cross' : 'Bearish Cross';
+                        macdBiasEl.className = 'font-mono text-xs ' + (isBullish ? 'text-buy' : 'text-sell');
+                    }
+                }
+
+                // Update Bollinger Bands block
+                if (data.bb_upper !== undefined && data.bb_upper !== null) {
+                    const bbUpEl = document.getElementById('osc-bb-upper');
+                    if (bbUpEl) bbUpEl.textContent = parseFloat(data.bb_upper).toFixed(decimals);
+
+                    const bbMidEl = document.getElementById('osc-bb-middle');
+                    if (bbMidEl) bbMidEl.textContent = parseFloat(data.bb_middle).toFixed(decimals);
+
+                    const bbLowEl = document.getElementById('osc-bb-lower');
+                    if (bbLowEl) bbLowEl.textContent = parseFloat(data.bb_lower).toFixed(decimals);
+                }
+
+                // Update Moving Averages Table Bias Elements
+                const mas = ['sma20', 'sma50', 'sma100', 'sma200', 'ema20', 'ema50', 'ema100', 'ema200'];
+                mas.forEach(ma => {
+                    const maValEl = document.getElementById(`ma-${ma}`);
+                    const maBiasEl = document.getElementById(`ma-${ma}-bias`);
+                    if (data[ma] !== undefined && data[ma] !== null) {
+                        const maVal = parseFloat(data[ma]);
+                        if (maValEl) maValEl.textContent = maVal.toFixed(decimals);
+                        if (maBiasEl && !isNaN(price)) {
+                            const isBullish = price > maVal;
+                            maBiasEl.textContent = isBullish ? 'Bullish' : 'Bearish';
+                            maBiasEl.className = 'stat-delta ' + (isBullish ? 'up' : 'down');
+                        }
+                    }
+                });
+            })
+            .catch(() => {});
+    }, 15000);
+
+    // ── MetaTrader Quick Execution Placement Script ────────────────────────
+    let isSubmitting = false;
+
+    const playTradeChime = () => {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, now);
+            osc.frequency.exponentialRampToValueAtTime(1760, now + 0.1);
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.12, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.start(now);
+            osc.stop(now + 0.4);
+        } catch (e) {}
+    };
+
+    const notify = (msg, type) => {
+        if (typeof window.showToast === 'function') {
+            window.showToast(msg, type);
+        } else {
+            alert(`${type.toUpperCase()}: ${msg}`);
+        }
+    };
+
+    const placeTrade = (direction) => {
+        if (isSubmitting) return;
+        isSubmitting = true;
+
+        const lotSize = parseFloat(document.getElementById('trade-lot-size').value) || 0.01;
+        const leverage = parseInt(document.getElementById('trade-leverage').value) || 100;
+        const investedAmount = parseFloat(document.getElementById('trade-invested-amount').value) || 15.00;
+        
+        let stopLoss = document.getElementById('trade-stop-loss').value;
+        let takeProfit = document.getElementById('trade-take-profit').value;
+        stopLoss = stopLoss && stopLoss.trim() !== '' ? parseFloat(stopLoss) : null;
+        takeProfit = takeProfit && takeProfit.trim() !== '' ? parseFloat(takeProfit) : null;
+
+        const csrfToken = (typeof getCookie === 'function') ? getCookie('csrftoken') : (() => {
+            return document.cookie.split('; ').reduce((acc, c) => {
+                const [k, v] = c.split('=');
+                return k === 'csrftoken' ? decodeURIComponent(v) : acc;
+            }, '');
+        })();
+
+        // Disable buttons
+        const btnBuy = document.getElementById('btn-execute-long');
+        const btnSell = document.getElementById('btn-execute-short');
+        if (btnBuy) btnBuy.disabled = true;
+        if (btnSell) btnSell.disabled = true;
+
+        fetch('/journal/api/open/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                pair: currentPair,
+                direction: direction,
+                lot_size: lotSize,
+                invested_amount: investedAmount,
+                leverage: leverage,
+                stop_loss: stopLoss,
+                take_profit: takeProfit
+            })
+        })
+        .then(r => r.json().then(data => ({ status: r.status, data })))
+        .then(({ status, data }) => {
+            if (status === 200 && data.status === 'success') {
+                notify(`Executed ${direction} position for ${currentPair} at $${data.trade.entry_price.toFixed(decimals)}`, 'success');
+                playTradeChime();
+                setTimeout(() => {
+                    window.location.href = "{% url 'journal:list' %}";
+                }, 1200);
+            } else {
+                notify(data.message || 'Execution failed.', 'error');
+                if (btnBuy) btnBuy.disabled = false;
+                if (btnSell) btnSell.disabled = false;
+            }
+        })
+        .catch(() => {
+            notify('Connection error. Execution failed.', 'error');
+            if (btnBuy) btnBuy.disabled = false;
+            if (btnSell) btnSell.disabled = false;
+        })
+        .finally(() => {
+            isSubmitting = false;
+        });
+    };
+
+    const btnBuy = document.getElementById('btn-execute-long');
+    const btnSell = document.getElementById('btn-execute-short');
+    if (btnBuy) btnBuy.addEventListener('click', () => placeTrade('LONG'));
+    if (btnSell) btnSell.addEventListener('click', () => placeTrade('SHORT'));
+});
+</script>
+{% endblock %}

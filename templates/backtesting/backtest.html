@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Backtesting{% endblock %}
+{% block content %}
+<div class="page-inner">
+  <div class="page-header">
+    <div><h1 class="page-title">Strategy Backtesting</h1><p class="page-subtitle">Test strategies on historical data</p></div>
+  </div>
+
+  <div class="backtest-layout">
+    <!-- Form -->
+    <div class="card">
+      <h2 class="section-title">Configure Backtest</h2>
+      <form method="post" class="auth-form mt-4" id="backtest-form">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label" for="bt-pair">Currency Pair</label>
+          <select name="pair" id="bt-pair" class="form-select">
+            {% for p in pairs %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="bt-strategy">Strategy</label>
+          <select name="strategy" id="bt-strategy" class="form-select">
+            {% for s in strategies %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="bt-from">From Date</label>
+            <input type="date" name="date_from" id="bt-from" class="form-input" value="2024-01-01"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="bt-to">To Date</label>
+            <input type="date" name="date_to" id="bt-to" class="form-input" value="2024-06-30"/>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg mt-4" id="run-backtest-btn">▶ Run Backtest</button>
+      </form>
+    </div>
+
+    <!-- Results -->
+    {% if result %}
+    <div class="flex flex-col gap-6">
+      <div class="card">
+        <h2 class="section-title">Results — {{ result.pair }} · {{ result.strategy }}</h2>
+        <div class="grid grid-3 gap-4 mt-4">
+          <div class="backtest-metric">
+            <div class="backtest-metric-value text-buy">{{ result.win_rate }}%</div>
+            <div class="backtest-metric-label">Win Rate</div>
+          </div>
+          <div class="backtest-metric">
+            <div class="backtest-metric-value {% if result.net_pnl >= 0 %}text-buy{% else %}text-sell{% endif %}">
+              {% if result.net_pnl >= 0 %}+{% endif %}${{ result.net_pnl }}
+            </div>
+            <div class="backtest-metric-label">Net P&amp;L</div>
+          </div>
+          <div class="backtest-metric">
+            <div class="backtest-metric-value">{{ result.total_trades }}</div>
+            <div class="backtest-metric-label">Total Trades</div>
+          </div>
+          <div class="backtest-metric">
+            <div class="backtest-metric-value {% if result.profit_factor >= 1.5 %}text-buy{% else %}text-hold{% endif %}">{{ result.profit_factor }}</div>
+            <div class="backtest-metric-label">Profit Factor</div>
+          </div>
+          <div class="backtest-metric">
+            <div class="backtest-metric-value {% if result.sharpe_ratio >= 1 %}text-buy{% else %}text-hold{% endif %}">{{ result.sharpe_ratio }}</div>
+            <div class="backtest-metric-label">Sharpe Ratio</div>
+          </div>
+          <div class="backtest-metric">
+            <div class="backtest-metric-value text-sell">{{ result.max_drawdown }}%</div>
+            <div class="backtest-metric-label">Max Drawdown</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Equity Curve -->
+      <div class="card">
+        <h2 class="section-title">Equity Curve</h2>
+        <div id="equity-chart" class="equity-chart" role="img" aria-label="Equity curve chart"></div>
+        <script>
+          (function() {
+            const data = {{ result.equity_curve|safe }};
+            const chart = document.getElementById('equity-chart');
+            if (!data.length) return;
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            const range = max - min || 1;
+            const w = 100 / (data.length - 1);
+            let path = '';
+            data.forEach((v, i) => {
+              const x = i * w;
+              const y = 100 - ((v - min) / range * 90 + 5);
+              path += (i === 0 ? 'M' : 'L') + `${x},${y}`;
+            });
+            const lastVal = data[data.length - 1];
+            const isUp = lastVal >= data[0];
+            chart.innerHTML = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="eg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="${isUp ? 'oklch(68% 0.20 155)' : 'oklch(62% 0.22 25)'}" stop-opacity="0.4"/>
+                  <stop offset="100%" stop-color="${isUp ? 'oklch(68% 0.20 155)' : 'oklch(62% 0.22 25)'}" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="${path}L100,100 L0,100 Z" fill="url(#eg)"/>
+              <path d="${path}" fill="none" stroke="${isUp ? 'oklch(68% 0.20 155)' : 'oklch(62% 0.22 25)'}" stroke-width="0.8"/>
+            </svg>`;
+          })();
+        </script>
+      </div>
+    </div>
+    {% else %}
+    <div class="card empty-state">
+      <div class="empty-state-icon" aria-hidden="true">🔬</div>
+      <div class="empty-state-title">Configure and run your first backtest</div>
+      <p class="text-muted text-sm">Select a pair and strategy, then click Run Backtest</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

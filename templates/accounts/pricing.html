@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Pricing{% endblock %}
+{% block content %}
+<div class="page-inner">
+  <div class="text-center mb-12">
+    <h1 class="page-title">Simple, Transparent Pricing</h1>
+    <p class="page-subtitle">Start free. Upgrade when you're ready to go pro.</p>
+  </div>
+
+  <div class="pricing-grid">
+    <!-- Free -->
+    <div class="card pricing-card">
+      <span class="pricing-badge" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--bg-border);">FREE</span>
+      <div class="pricing-price">$0<span class="pricing-period">/mo</span></div>
+      <p class="text-muted mt-2 mb-6">Get started at no cost</p>
+      <ul class="pricing-features" aria-label="Free plan features">
+        <li>3 signals per day</li>
+        <li>EUR/USD &amp; GBP/USD only</li>
+        <li>Basic RSI indicator</li>
+        <li>Trading journal (5 entries)</li>
+        <li class="unavailable">MACD &amp; Bollinger Bands</li>
+        <li class="unavailable">Backtesting engine</li>
+        <li class="unavailable">Analytics dashboard</li>
+        <li class="unavailable">All 6 currency pairs</li>
+      </ul>
+      <a href="{% url 'accounts:register' %}" class="btn btn-secondary btn-block btn-lg mt-8" id="free-plan-btn">Start Free</a>
+    </div>
+
+    <!-- Pro (featured) -->
+    <div class="card pricing-card featured">
+      <span class="pricing-badge" style="background:var(--grad-brand);color:#fff;">MOST POPULAR</span>
+      <div class="pricing-price">$49<span class="pricing-period">/mo</span></div>
+      <p class="text-muted mt-2 mb-6">For serious traders</p>
+      <ul class="pricing-features" aria-label="Pro plan features">
+        <li>Unlimited signals</li>
+        <li>All 6 currency pairs</li>
+        <li>RSI, MACD, Bollinger Bands, EMA</li>
+        <li>Unlimited journal entries</li>
+        <li>Full backtesting engine</li>
+        <li>AI analytics dashboard</li>
+        <li>Real-time WebSocket prices</li>
+        <li>Priority support</li>
+      </ul>
+      {% if request.user.is_authenticated %}
+      <a href="{% url 'accounts:upgrade' 'pro' %}" class="btn btn-primary btn-block btn-lg mt-8" id="pro-plan-btn">Upgrade to Pro</a>
+      {% else %}
+      <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-block btn-lg mt-8" id="pro-plan-btn">Get Pro</a>
+      {% endif %}
+    </div>
+
+    <!-- Enterprise -->
+    <div class="card pricing-card">
+      <span class="pricing-badge" style="background:linear-gradient(135deg,#b8860b,#ffd700);color:#000;">ENTERPRISE</span>
+      <div class="pricing-price">$199<span class="pricing-period">/mo</span></div>
+      <p class="text-muted mt-2 mb-6">For teams &amp; signal providers</p>
+      <ul class="pricing-features" aria-label="Enterprise plan features">
+        <li>Everything in Pro</li>
+        <li>REST API access</li>
+        <li>Team seats (up to 10)</li>
+        <li>Custom webhook signals</li>
+        <li>White-label options</li>
+        <li>SLA uptime guarantee</li>
+        <li>Dedicated account manager</li>
+        <li>Custom indicator development</li>
+      </ul>
+      {% if request.user.is_authenticated %}
+      <a href="{% url 'accounts:upgrade' 'enterprise' %}" class="btn btn-secondary btn-block btn-lg mt-8" id="enterprise-plan-btn">Upgrade to Enterprise</a>
+      {% else %}
+      <a href="{% url 'accounts:register' %}" class="btn btn-secondary btn-block btn-lg mt-8" id="enterprise-plan-btn">Contact Sales</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

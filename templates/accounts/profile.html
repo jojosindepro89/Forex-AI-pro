@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Profile Settings{% endblock %}
+{% block content %}
+<div class="page-inner" style="max-width: 800px;">
+  <div class="breadcrumb">
+    <a href="{% url 'signals:dashboard' %}">Dashboard</a>
+    <span class="breadcrumb-sep">/</span>
+    <span>Profile</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Profile Settings</h1>
+      <p class="page-subtitle">Manage your account information and subscription tier</p>
+    </div>
+  </div>
+
+  <div class="grid grid-2 gap-6">
+    <!-- User Card -->
+    <div class="card flex flex-col items-center text-center p-6">
+      <div class="nav-avatar mb-4" style="border-width: 3px; width: 84px; height: 84px; padding: 4px;">
+        <div class="avatar-img" style="width: 70px; height: 70px; font-size: 2rem; border-radius: var(--radius-full);">
+          {{ user.username|slice:":1"|upper }}
+        </div>
+      </div>
+      
+      <h2 class="text-xl font-bold">{{ user.username }}</h2>
+      <p class="text-sm text-muted mb-4">{{ user.email|default:"No email registered" }}</p>
+      
+      <span class="nav-badge badge-{{ user.plan }}" style="font-size: 11px; padding: 6px 14px; text-transform: uppercase;">
+        {{ user.plan_badge }} Tier
+      </span>
+
+      <div class="divider w-full mt-6"></div>
+
+      <div class="w-full text-left mt-4 flex flex-col gap-3">
+        <div class="flex justify-between text-sm">
+          <span class="text-muted">Member Since</span>
+          <span class="font-semibold text-primary">{{ user.date_joined|date:"N j, Y" }}</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-muted">Account Status</span>
+          <span class="font-semibold text-buy">✓ Active</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-muted">Timezone</span>
+          <span class="font-mono text-secondary">{{ user.timezone }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Details Form/Details -->
+    <div class="card flex flex-col gap-6">
+      <h3 class="section-title">Subscription & Access</h3>
+      
+      <div class="p-4 rounded border" style="background: var(--bg-elevated);">
+        {% if user.plan == 'free' %}
+        <h4 class="font-bold text-sm text-primary">Free Plan</h4>
+        <p class="text-xs text-secondary mt-1" style="line-height: 1.5;">You are currently on the Free tier. Upgrade to Pro or Enterprise to unlock real-time signal calculations, backtesting capabilities, and custom risk profiles.</p>
+        <a href="{% url 'accounts:pricing' %}" class="btn btn-primary btn-sm mt-4">Upgrade Subscription</a>
+        {% elif user.plan == 'pro' %}
+        <h4 class="font-bold text-sm text-buy">✓ Pro Plan Active</h4>
+        <p class="text-xs text-secondary mt-1" style="line-height: 1.5;">Thank you for subscribing! Your Pro subscription unlocks 100+ historical candles, local technical indicators calculation, and unlimited backtesting.</p>
+        <a href="{% url 'accounts:pricing' %}" class="btn btn-secondary btn-sm mt-4">Manage Subscription</a>
+        {% else %}
+        <h4 class="font-bold text-sm" style="color: gold;">👑 Enterprise Tier</h4>
+        <p class="text-xs text-secondary mt-1" style="line-height: 1.5;">Your Enterprise license grants you dedicated API endpoints, custom indicator templates, and integration capabilities.</p>
+        <a href="{% url 'accounts:pricing' %}" class="btn btn-secondary btn-sm mt-4">API Access Keys</a>
+        {% endif %}
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <span class="text-sm font-semibold">Biography</span>
+        <div class="p-4 rounded" style="background: var(--bg-elevated); min-height: 80px; font-size: 13px; color: var(--text-secondary);">
+          {{ user.bio|default:"No bio written yet. Share your trading journey here!" }}
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-4">
+        <a href="{% url 'signals:dashboard' %}" class="btn btn-primary w-full">Go to Dashboard</a>
+        <a href="{% url 'accounts:logout' %}" class="btn btn-secondary text-sell" style="border-color: var(--signal-sell-bg);">Logout</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

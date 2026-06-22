@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Analytics{% endblock %}
+{% block content %}
+<div class="page-inner">
+  <div class="page-header">
+    <div><h1 class="page-title">AI Analytics</h1><p class="page-subtitle">Model performance and accuracy metrics</p></div>
+  </div>
+
+  <!-- Top Stats -->
+  <div class="grid grid-4 mb-8">
+    <div class="card stat-card admin-stat revenue">
+      <span class="stat-label">Overall Accuracy</span>
+      <div class="stat-value text-buy">{{ data.overall_accuracy }}%</div>
+    </div>
+    <div class="card stat-card admin-stat users">
+      <span class="stat-label">Win Rate</span>
+      <div class="stat-value">{{ data.win_rate }}%</div>
+    </div>
+    <div class="card stat-card admin-stat signals">
+      <span class="stat-label">Total Signals</span>
+      <div class="stat-value">{{ data.total_signals }}</div>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-label">Avg Confidence</span>
+      <div class="stat-value">{{ data.avg_confidence }}%</div>
+    </div>
+  </div>
+
+  <!-- Accuracy History Chart -->
+  <div class="grid grid-2 mb-8">
+    <div class="card">
+      <h2 class="section-title">Monthly Accuracy</h2>
+      <div class="bar-chart" role="img" aria-label="Monthly accuracy chart">
+        {% for item in data.monthly_accuracy %}
+        <div class="bar-chart-item">
+          <div class="bar-chart-bar-wrap">
+            <div class="bar-chart-bar" style="height:{{ item.accuracy|floatformat:0 }}%;background:var(--grad-brand);" title="{{ item.month }}: {{ item.accuracy }}%"></div>
+          </div>
+          <div class="bar-chart-label">{{ item.month }}</div>
+          <div class="bar-chart-value">{{ item.accuracy }}%</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Strategy Comparison -->
+    <div class="card">
+      <h2 class="section-title">Strategy Comparison</h2>
+      <div class="data-table-wrap">
+        <table class="data-table" aria-label="Strategy comparison table">
+          <thead>
+            <tr><th>Strategy</th><th>Win Rate</th><th>Signals</th><th>Profit Factor</th></tr>
+          </thead>
+          <tbody>
+            {% for s in data.strategies %}
+            <tr>
+              <td class="primary">{{ s.name }}</td>
+              <td class="{% if s.win_rate >= 70 %}text-buy{% else %}text-secondary{% endif %}">{{ s.win_rate }}%</td>
+              <td>{{ s.signals }}</td>
+              <td class="mono {% if s.pf >= 1.5 %}text-buy{% else %}text-hold{% endif %}">{{ s.pf }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Model Information</h2>
+    <div class="grid grid-3">
+      <div class="p-4 rounded" style="background:var(--bg-elevated);">
+        <div class="text-muted text-xs mb-1">Model Version</div>
+        <div class="font-mono font-bold">{{ data.model_version }}</div>
+      </div>
+      <div class="p-4 rounded" style="background:var(--bg-elevated);">
+        <div class="text-muted text-xs mb-1">Data Source</div>
+        <div class="font-mono font-bold">Twelve Data API</div>
+      </div>
+      <div class="p-4 rounded" style="background:var(--bg-elevated);">
+        <div class="text-muted text-xs mb-1">Indicators</div>
+        <div class="font-mono font-bold">RSI, MACD, BB, EMA</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Confirm Delete Trade{% endblock %}
+{% block content %}
+<div class="page-inner" style="max-width: 500px;">
+  <div class="breadcrumb">
+    <a href="{% url 'journal:list' %}">Journal</a>
+    <span class="breadcrumb-sep">/</span>
+    <a href="{% url 'journal:detail' entry.pk %}">Trade #{{ entry.pk }}</a>
+    <span class="breadcrumb-sep">/</span>
+    <span>Delete</span>
+  </div>
+
+  <div class="card flex flex-col gap-6 mt-4">
+    <h1 class="page-title text-sell" style="font-size: 1.5rem;">Delete Trade Log</h1>
+    <p class="text-secondary text-sm" style="line-height: 1.6;">Are you sure you want to permanently delete the log entry for this **{{ entry.pair }}** trade executed on **{{ entry.trade_date|date:"F j, Y" }}**?</p>
+    
+    <div class="p-4 rounded border" style="background: var(--bg-elevated); font-family: var(--font-mono); font-size: 13px;">
+      <div class="flex justify-between mb-2">
+        <span class="text-muted">Direction:</span>
+        <span class="font-bold">{{ entry.direction }}</span>
+      </div>
+      <div class="flex justify-between mb-2">
+        <span class="text-muted">P&amp;L:</span>
+        <span class="font-bold {% if entry.pnl >= 0 %}text-buy{% else %}text-sell{% endif %}">
+          {% if entry.pnl >= 0 %}+{% endif %}${{ entry.pnl|floatformat:2 }}
+        </span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-muted">Entry Price:</span>
+        <span class="font-bold">{{ entry.entry_price|floatformat:5 }}</span>
+      </div>
+    </div>
+
+    <form method="post" class="flex gap-3 mt-4">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-primary btn-block" style="background: var(--grad-sell); box-shadow: var(--shadow-sell);">Delete Permanently</button>
+      <a href="{% url 'journal:detail' entry.pk %}" class="btn btn-secondary btn-block">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

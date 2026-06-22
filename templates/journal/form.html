@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}{{ title|default:"Trade" }}{% endblock %}
+{% block content %}
+<div class="page-inner" style="max-width:700px;">
+  <div class="breadcrumb"><a href="{% url 'journal:list' %}">Journal</a><span class="breadcrumb-sep">/</span><span>{{ title|default:"Log Trade" }}</span></div>
+  <div class="page-header"><h1 class="page-title">{{ title|default:"Log Trade" }}</h1></div>
+  <div class="card">
+    <form method="post" enctype="multipart/form-data" class="auth-form" id="journal-form">
+      {% csrf_token %}
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.pair.id_for_label }}">Currency Pair</label>
+          {{ form.pair }}
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="{{ form.direction.id_for_label }}">Direction</label>
+          {{ form.direction }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.entry_price.id_for_label }}">Entry Price</label>
+          {{ form.entry_price }}
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="{{ form.exit_price.id_for_label }}">Exit Price</label>
+          {{ form.exit_price }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.stop_loss.id_for_label }}">Stop Loss</label>
+          {{ form.stop_loss }}
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="{{ form.take_profit.id_for_label }}">Take Profit</label>
+          {{ form.take_profit }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.outcome.id_for_label }}">Outcome</label>
+          {{ form.outcome }}
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="{{ form.pnl.id_for_label }}">P&amp;L ($)</label>
+          {{ form.pnl }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.trade_date.id_for_label }}">Trade Date</label>
+          {{ form.trade_date }}
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="{{ form.lot_size.id_for_label }}">Lot Size</label>
+          {{ form.lot_size }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.invested_amount.id_for_label }}">Invested Capital ($)</label>
+          {{ form.invested_amount }}
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="{{ form.leverage.id_for_label }}">Leverage (x)</label>
+          {{ form.leverage }}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="{{ form.notes.id_for_label }}">Notes & Analysis</label>
+        {{ form.notes }}
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="{{ form.screenshot.id_for_label }}">Screenshot (optional)</label>
+        {{ form.screenshot }}
+      </div>
+      <div class="flex gap-3 mt-6">
+        <button type="submit" class="btn btn-primary" id="journal-submit-btn">Save Trade</button>
+        <a href="{% url 'journal:list' %}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

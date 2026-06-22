@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% block title %}Trading Journal{% endblock %}
+{% block content %}
+<div class="page-inner">
+  <div class="page-header">
+    <div><h1 class="page-title">Trading Journal</h1><p class="page-subtitle">Track your trades and performance</p></div>
+    <a href="{% url 'journal:create' %}" class="btn btn-primary" id="log-trade-btn">+ Log Trade</a>
+  </div>
+
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+  <!-- Live AI Trade Monitor Card -->
+  <div id="live-monitor-section" style="display:none; margin-bottom: var(--space-8);">
+    <h2 class="section-title">📡 Live AI Trade Monitor</h2>
+    <p class="text-xs text-muted mb-4">Real-time calculations for small accounts. AI Copilot advises when to cut off or hold positions.</p>
+    <div class="grid grid-auto mb-6" id="active-trades-container">
+      <!-- Active trades injected dynamically via JS -->
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-4 mb-8">
+    <div class="card stat-card"><span class="stat-label">Win Rate</span><div class="stat-value text-buy">{{ win_rate }}%</div></div>
+    <div class="card stat-card"><span class="stat-label">Total Wins</span><div class="stat-value text-buy">{{ wins }}</div></div>
+    <div class="card stat-card"><span class="stat-label">Total Losses</span><div class="stat-value text-sell">{{ losses }}</div></div>
+    <div class="card stat-card">
+      <span class="stat-label">Net P&amp;L</span>
+      <div class="stat-value {% if total_pnl >= 0 %}text-buy{% else %}text-sell{% endif %}">
+        {% if total_pnl >= 0 %}+{% endif %}${{ total_pnl|floatformat:2 }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Entry List -->
+  <div class="card">
+    {% if entries %}
+    <div class="data-table-wrap">
+      <table class="data-table" aria-label="Journal entries">
+        <thead>
+          <tr><th>Date</th><th>Pair</th><th>Direction</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Outcome</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for entry in entries %}
+          <tr>
+            <td>{{ entry.trade_date }}</td>
+            <td class="primary">{{ entry.pair }}</td>
+            <td><span class="signal-badge {% if entry.direction == 'LONG' %}buy{% else %}sell{% endif %}">{{ entry.direction }}</span></td>
+            <td class="mono">{{ entry.entry_price }}</td>
+            <td class="mono">{{ entry.exit_price|default:"—" }}</td>
+            <td class="mono {% if entry.pnl and entry.pnl >= 0 %}pnl-positive{% elif entry.pnl %}pnl-negative{% endif %}">{{ entry.pnl_display }}</td>
+            <td><span class="signal-badge {% if entry.outcome == 'WIN' %}buy{% elif entry.outcome == 'LOSS' %}sell{% else %}hold{% endif %}">{{ entry.outcome }}</span></td>
+            <td>
+              <a href="{% url 'journal:detail' entry.pk %}" class="btn btn-ghost btn-sm">View</a>
+              <a href="{% url 'journal:edit' entry.pk %}" class="btn btn-ghost btn-sm">Edit</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon" aria-hidden="true">📝</div>
+      <div class="empty-state-title">No trades logged yet</div>
+      <p class="text-muted">Start tracking your trades to analyse performance</p>
+      <a href="{% url 'journal:create' %}" class="btn btn-primary mt-4">Log Your First Trade</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function getCsrfToken() {
+  const el = document.querySelector('[name=csrfmiddlewaretoken]');
+  return el ? el.value : '';
+}
+
+function closeTrade(tradeId, pair) {
+  if (!confirm(`Are you sure you want to close the trade for ${pair} at the current market price?`)) {
+    return;
+  }
+  
+  const token = getCsrfToken();
+  fetch(`/journal/api/close/${tradeId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': token,
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'success') {
+      showToast(`Closed trade successfully! PnL: $${data.pnl}`, 'success');
+      pollActiveTrades();
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      showToast('Failed to close trade.', 'error');
+    }
+  })
+  .catch(() => showToast('Error closing trade.', 'error'));
+}
+
+function pollActiveTrades() {
+  fetch('/journal/api/active-advice/')
+    .then(r => r.json())
+    .then(data => {
+      const trades = data.active_trades || [];
+      const section = document.getElementById('live-monitor-section');
+      const container = document.getElementById('active-trades-container');
+      
+      if (!section || !container) return;
+      
+      if (trades.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+      
+      section.style.display = 'block';
+      
+      // Update or rebuild cards
+      container.innerHTML = '';
+      trades.forEach(t => {
+        const pnlClass = t.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+        const pnlSign = t.pnl >= 0 ? '+' : '';
+        const isTimeWarning = t.reason.includes('TIME');
+        const isLossWarning = t.reason.includes('LOSS') || t.reason.includes('REVERSAL');
+        
+        let borderStyle = 'border-color: var(--bg-border);';
+        if (t.recommendation === 'CLOSE') {
+          if (isTimeWarning) {
+            borderStyle = 'border: 1.5px solid oklch(70% 0.15 70);'; // Amber time warning
+          } else if (isLossWarning) {
+            borderStyle = 'border: 1.5px solid var(--signal-sell);'; // Red loss warning
+          } else {
+            borderStyle = 'border: 1.5px solid var(--signal-buy);'; // Green profit target
+          }
+        }
+        
+        const card = document.createElement('div');
+        card.className = 'card active-trade-card flex flex-col gap-2';
+        card.style = borderStyle + ' position: relative; overflow: hidden;';
+        
+        // Add a vertical bar on the left matching recommendation color
+        let barColor = 'var(--bg-border)';
+        if (t.recommendation === 'CLOSE') {
+          barColor = isTimeWarning ? 'oklch(70% 0.15 70)' : (isLossWarning ? 'var(--signal-sell)' : 'var(--signal-buy)');
+        }
+        
+        card.innerHTML = `
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: ${barColor};"></div>
+          <div style="padding-left: var(--space-2);">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-lg tracking-wider" style="color: var(--text-primary);">${t.pair}</span>
+              <span class="signal-badge ${t.direction.toLowerCase()}" style="font-size: 10px; padding: 2px 8px;">${t.direction}</span>
+            </div>
+            
+            <div class="flex justify-between items-center mb-2 text-xs">
+              <span class="text-muted">Capital / Leverage</span>
+              <span class="font-bold font-mono text-primary">$${t.invested.toFixed(2)} (${t.leverage}x)</span>
+            </div>
+            
+            <div class="grid grid-2 gap-2 mb-2 p-2 rounded" style="background: var(--bg-elevated); font-size: 11px;">
+              <div>
+                <span class="text-muted block text-xs">Entry Price</span>
+                <span class="font-mono font-bold">${t.entry_price.toFixed(5)}</span>
+              </div>
+              <div class="text-right">
+                <span class="text-muted block text-xs">Current Price</span>
+                <span class="font-mono font-bold text-primary">${t.current_price.toFixed(5)}</span>
+              </div>
+            </div>
+            
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs text-muted">Live Floating P&L</span>
+              <span class="font-mono font-bold ${pnlClass}" style="font-size: 1.05rem;">
+                ${pnlSign}$${t.pnl.toFixed(2)} (${pnlSign}${t.pnl_pct.toFixed(1)}%)
+              </span>
+            </div>
+
+            <div class="flex justify-between items-center mb-3 text-xs">
+              <span class="text-muted">Time Elapsed</span>
+              <span class="font-mono font-bold text-primary">${t.elapsed_formatted}</span>
+            </div>
+            
+            <div class="p-3 rounded mb-3" style="background: var(--bg-elevated); border: 1px solid var(--bg-border); font-size: 11px; line-height: 1.4;">
+              <div class="font-bold mb-1" style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">
+                Copilot Recommendation
+              </div>
+              <div class="font-semibold text-primary">${t.reason}</div>
+            </div>
+            
+            <button onclick="closeTrade(${t.id}, '${t.pair}')" class="btn ${t.recommendation === 'CLOSE' ? 'btn-primary' : 'btn-secondary'} btn-block btn-sm mt-1">
+              ❌ Instant Close Trade
+            </button>
+          </div>
+        `;
+        
+        container.appendChild(card);
+      });
+    })
+    .catch(() => {});
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  pollActiveTrades();
+  setInterval(pollActiveTrades, 2000);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+{
+  "name": "forexai-pro-root",
+  "version": "1.0.0",
+  "description": "Root package config to run Django backend and Vite frontend concurrently",
+  "scripts": {
+    "dev": "npx -y concurrently \"./venv/bin/python manage.py runserver\" \"npm run dev --prefix frontend\"",
+    "backend": "./venv/bin/python manage.py runserver",
+    "frontend": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend"
+  }
+}

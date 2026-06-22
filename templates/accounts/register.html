@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card card glass-panel">
+    <div class="auth-logo" aria-hidden="true">
+      <svg width="48" height="48" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="9" fill="url(#ag)"/><path d="M9 23L16 13L21 18L28 9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="28" cy="9" r="3" fill="#00f5a0"/><defs><linearGradient id="ag" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse"><stop stop-color="#0f3460"/><stop offset="1" stop-color="#533483"/></linearGradient></defs></svg>
+    </div>
+    <h1 class="auth-title">Create your account</h1>
+    <p class="auth-subtitle">Join thousands of traders using AI-powered signals</p>
+
+    {% if form.non_field_errors %}
+    <div class="alert-msg alert-error" role="alert">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="post" novalidate class="auth-form" id="register-form">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label" for="id_username">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}<div class="form-error" role="alert">{{ form.username.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="id_email">Email Address</label>
+        {{ form.email }}
+        {% if form.email.errors %}<div class="form-error" role="alert">{{ form.email.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="id_password1">Password</label>
+        {{ form.password1 }}
+        {% if form.password1.errors %}<div class="form-error" role="alert">{{ form.password1.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="id_password2">Confirm Password</label>
+        {{ form.password2 }}
+        {% if form.password2.errors %}<div class="form-error" role="alert">{{ form.password2.errors.0 }}</div>{% endif %}
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg mt-4" id="register-submit-btn">Create Free Account</button>
+    </form>
+
+    <p class="auth-footer">Already have an account? <a href="{% url 'accounts:login' %}" class="auth-link">Sign in</a></p>
+    <p class="auth-disclaimer">By creating an account you acknowledge that ForexAI Pro provides information only, not financial advice.</p>
+  </div>
+</div>
+{% endblock %}

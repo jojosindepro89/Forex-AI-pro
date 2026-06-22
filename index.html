@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ForexAI Pro — AI-Powered Forex Market Intelligence</title>
+  <meta name="description" content="ForexAI Pro: Advanced AI-powered forex market intelligence platform. Get real-time trade signals, technical analysis, sentiment analysis and risk management tools for smarter trading decisions." />
+  <meta name="keywords" content="forex trading, AI trading signals, market analysis, technical indicators, trading platform" />
+  <meta property="og:title" content="ForexAI Pro — AI-Powered Forex Intelligence" />
+  <meta property="og:description" content="Institutional-grade AI forex intelligence for all trader levels." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Navigation -->
+    <nav id="main-nav" class="nav" role="navigation" aria-label="Main navigation">
+      <div class="nav-brand">
+        <div class="nav-logo">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <rect width="32" height="32" rx="8" fill="url(#logoGrad)"/>
+            <path d="M8 20L14 12L18 16L24 8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="24" cy="8" r="2.5" fill="#00f5a0"/>
+            <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#0f3460"/><stop offset="1" stop-color="#533483"/></linearGradient></defs>
+          </svg>
+        </div>
+        <span class="nav-title">ForexAI<span class="nav-title-pro">Pro</span></span>
+      </div>
+
+      <div class="nav-links" id="nav-links" role="menubar">
+        <a href="#" class="nav-link active" data-page="dashboard" role="menuitem">Dashboard</a>
+        <a href="#" class="nav-link" data-page="signals" role="menuitem">AI Signals</a>
+        <a href="#" class="nav-link" data-page="analytics" role="menuitem">Analytics</a>
+        <a href="#" class="nav-link" data-page="backtesting" role="menuitem">Backtesting</a>
+        <a href="#" class="nav-link" data-page="journal" role="menuitem">Journal</a>
+        <a href="#" class="nav-link" data-page="pricing" role="menuitem">Pricing</a>
+      </div>
+
+      <div class="nav-actions">
+        <button id="theme-toggle" class="btn-icon" aria-label="Toggle theme" title="Toggle dark/light mode">
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <div class="nav-badge badge-pro">PRO</div>
+        <div class="nav-avatar" id="nav-avatar-btn" role="button" tabindex="0" aria-label="User profile" aria-haspopup="true">
+          <img src="https://ui-avatars.com/api/?name=Alex+Johnson&background=533483&color=fff&size=36" alt="User avatar" width="36" height="36" />
+          <div class="avatar-status online"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" data-page="admin" id="admin-btn">Admin</button>
+        <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle mobile menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile Drawer -->
+    <div class="mobile-drawer" id="mobile-drawer" aria-hidden="true" role="dialog" aria-label="Mobile navigation">
+      <div class="mobile-drawer-inner">
+        <a href="#" class="mobile-nav-link" data-page="dashboard">Dashboard</a>
+        <a href="#" class="mobile-nav-link" data-page="signals">AI Signals</a>
+        <a href="#" class="mobile-nav-link" data-page="analytics">Analytics</a>
+        <a href="#" class="mobile-nav-link" data-page="backtesting">Backtesting</a>
+        <a href="#" class="mobile-nav-link" data-page="journal">Journal</a>
+        <a href="#" class="mobile-nav-link" data-page="pricing">Pricing</a>
+        <a href="#" class="mobile-nav-link" data-page="admin">Admin</a>
+      </div>
+    </div>
+    <div class="mobile-overlay" id="mobile-overlay"></div>
+
+    <!-- Page Container -->
+    <main id="page-container" role="main">
+      <!-- Pages rendered by JS -->
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

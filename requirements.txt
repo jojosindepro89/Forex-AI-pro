@@ -1,0 +1,13 @@
+django>=5.0
+daphne>=4.0
+channels>=4.0
+channels-redis>=4.0
+psycopg2-binary>=2.9
+celery[redis]>=5.3
+redis>=5.0
+python-decouple>=3.8
+Pillow>=10.0
+whitenoise>=6.5
+requests>=2.31
+twelvedata>=1.2
+dj-database-url>=2.1.0

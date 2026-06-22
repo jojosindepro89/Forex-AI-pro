@@ -1,0 +1,1 @@
+"""ForexAI Pro accounts app"""

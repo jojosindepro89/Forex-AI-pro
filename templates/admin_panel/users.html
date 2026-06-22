@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}User Management — Admin Panel{% endblock %}
+{% block content %}
+<div class="page-inner">
+  <div class="breadcrumb">
+    <a href="{% url 'signals:dashboard' %}">Dashboard</a>
+    <span class="breadcrumb-sep">/</span>
+    <a href="{% url 'admin_panel:dashboard' %}">Admin Dashboard</a>
+    <span class="breadcrumb-sep">/</span>
+    <span>Users</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">User Management</h1>
+      <p class="page-subtitle">View and audit all registered ForexAI Pro user profiles</p>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="flex gap-2 mb-6 flex-wrap">
+    <a href="{% url 'admin_panel:users' %}" class="btn btn-sm {% if not request.GET.plan %}btn-primary{% else %}btn-secondary{% endif %}">
+      All Users
+    </a>
+    <a href="{% url 'admin_panel:users' %}?plan=free" class="btn btn-sm {% if request.GET.plan == 'free' %}btn-primary{% else %}btn-secondary{% endif %}">
+      Free Tier
+    </a>
+    <a href="{% url 'admin_panel:users' %}?plan=pro" class="btn btn-sm {% if request.GET.plan == 'pro' %}btn-primary{% else %}btn-secondary{% endif %}">
+      Pro Tier
+    </a>
+    <a href="{% url 'admin_panel:users' %}?plan=enterprise" class="btn btn-sm {% if request.GET.plan == 'enterprise' %}btn-primary{% else %}btn-secondary{% endif %}">
+      Enterprise Tier
+    </a>
+  </div>
+
+  <!-- Users table -->
+  <div class="card p-0 overflow-hidden">
+    <div class="data-table-wrap">
+      <table class="data-table" aria-label="User accounts list">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email Address</th>
+            <th>Subscription Tier</th>
+            <th>Staff Status</th>
+            <th>Provider status</th>
+            <th>Date Joined</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td class="font-bold primary">{{ u.username }}</td>
+            <td>{{ u.email|default:"—" }}</td>
+            <td>
+              <span class="nav-badge badge-{{ u.plan }}" style="font-size: 9px; text-transform: uppercase;">
+                {{ u.plan }}
+              </span>
+            </td>
+            <td>
+              {% if u.is_staff %}
+              <span class="stat-delta up">Admin/Staff</span>
+              {% else %}
+              <span class="text-muted text-xs">User</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if u.is_signal_provider %}
+              <span class="stat-delta info">Provider</span>
+              {% else %}
+              <span class="text-muted text-xs">—</span>
+              {% endif %}
+            </td>
+            <td class="mono text-xs">{{ u.date_joined|date:"Y-m-d H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center p-6 text-muted">No users found matching this filter.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

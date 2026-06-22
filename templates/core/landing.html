@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Welcome{% endblock %}
+{% block content %}
+<div class="landing-page">
+
+  <!-- Hero -->
+  <section class="hero" aria-label="Hero section">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="live-dot"></span> Live AI Signals — 7 Major Assets
+      </div>
+      <h1 class="hero-title">
+        Trade Smarter with<br/>
+        <span class="gradient-text">AI-Powered Intelligence</span>
+      </h1>
+      <p class="hero-subtitle">
+        ForexAI Pro analyzes EUR/USD, GBP/USD, USD/JPY, Gold (XAU/USD) and more using real-time technical indicators, machine learning, and sentiment analysis — giving you probability-based trade signals, not guesses.
+      </p>
+      <div class="hero-cta">
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg" id="hero-cta-btn">
+          Start Free — No Credit Card
+        </a>
+        <a href="{% url 'accounts:pricing' %}" class="btn btn-secondary btn-lg">View Pricing</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-value">72.4%</span>
+          <span class="hero-stat-label">Avg Win Rate</span>
+        </div>
+        <div class="hero-stat-divider" aria-hidden="true"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">7</span>
+          <span class="hero-stat-label">Assets & Gold</span>
+        </div>
+        <div class="hero-stat-divider" aria-hidden="true"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">Live</span>
+          <span class="hero-stat-label">Twelve Data API</span>
+        </div>
+        <div class="hero-stat-divider" aria-hidden="true"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">4</span>
+          <span class="hero-stat-label">Indicators Analyzed</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live price cards preview -->
+    <div class="hero-preview" aria-label="Live price preview">
+      <div class="preview-card">
+        <div class="preview-pair">EUR/USD</div>
+        <div class="preview-price" id="preview-eurusd">Loading...</div>
+        <span class="signal-badge buy"><span class="signal-dot" aria-hidden="true"></span>BUY</span>
+      </div>
+      <div class="preview-card">
+        <div class="preview-pair">GBP/USD</div>
+        <div class="preview-price" id="preview-gbpusd">Loading...</div>
+        <span class="signal-badge sell"><span class="signal-dot" aria-hidden="true"></span>SELL</span>
+      </div>
+      <div class="preview-card">
+        <div class="preview-pair">USD/JPY</div>
+        <div class="preview-price" id="preview-usdjpy">Loading...</div>
+        <span class="signal-badge hold"><span class="signal-dot" aria-hidden="true"></span>HOLD</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section" aria-label="Platform features">
+    <div class="section-container">
+      <h2 class="section-heading text-center">Everything You Need to Trade with Confidence</h2>
+      <p class="section-subheading text-center">Powered by real-time Twelve Data API + AI signal engine</p>
+      <div class="features-grid">
+        <div class="feature-card card card-hoverable">
+          <div class="feature-icon" aria-hidden="true">⚡</div>
+          <h3 class="feature-title">Real-Time AI Signals</h3>
+          <p class="feature-desc">Live BUY/SELL/HOLD signals generated from RSI, MACD, Bollinger Bands, and EMA using real Twelve Data prices.</p>
+        </div>
+        <div class="feature-card card card-hoverable">
+          <div class="feature-icon" aria-hidden="true">📊</div>
+          <h3 class="feature-title">Technical Analysis</h3>
+          <p class="feature-desc">RSI, MACD, Bollinger Bands, and EMA analysis sourced directly from the Twelve Data API for maximum accuracy.</p>
+        </div>
+        <div class="feature-card card card-hoverable">
+          <div class="feature-icon" aria-hidden="true">🎯</div>
+          <h3 class="feature-title">Risk Management</h3>
+          <p class="feature-desc">Every signal includes entry price, stop loss, and take profit levels calculated with a 1:2 risk-reward ratio.</p>
+        </div>
+        <div class="feature-card card card-hoverable">
+          <div class="feature-icon" aria-hidden="true">🔬</div>
+          <h3 class="feature-title">Strategy Backtesting</h3>
+          <p class="feature-desc">Test your strategies on historical data. View win rate, drawdown, profit factor, and Sharpe ratio.</p>
+        </div>
+        <div class="feature-card card card-hoverable">
+          <div class="feature-icon" aria-hidden="true">📝</div>
+          <h3 class="feature-title">Trading Journal</h3>
+          <p class="feature-desc">Log every trade, upload screenshots, add notes, and track your performance over time.</p>
+        </div>
+        <div class="feature-card card card-hoverable">
+          <div class="feature-icon" aria-hidden="true">🌐</div>
+          <h3 class="feature-title">7 Major Assets</h3>
+          <p class="feature-desc">EUR/USD, GBP/USD, USD/JPY, AUD/USD, USD/CAD, EUR/GBP, XAU/USD — all analyzed simultaneously in real-time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Disclaimer -->
+  <section class="disclaimer-section" aria-label="Risk disclaimer">
+    <div class="disclaimer-card card">
+      <p><strong>⚠️ Risk Disclaimer:</strong> ForexAI Pro provides probability-based trade recommendations for informational purposes only. Forex trading involves significant risk of loss. Past performance does not guarantee future results. Always conduct your own research and consult a qualified financial advisor before trading.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+  // Fetch live prices for hero preview
+  fetch('/api/prices/')
+    .then(r => r.json())
+    .then(data => {
+      const prices = data.prices || {};
+      if (prices['EUR/USD']) document.getElementById('preview-eurusd').textContent = prices['EUR/USD'].toFixed(5);
+      if (prices['GBP/USD']) document.getElementById('preview-gbpusd').textContent = prices['GBP/USD'].toFixed(5);
+      if (prices['USD/JPY']) document.getElementById('preview-usdjpy').textContent = prices['USD/JPY'].toFixed(3);
+    })
+    .catch(() => {
+      ['preview-eurusd','preview-gbpusd','preview-usdjpy'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '—';
+      });
+    });
+</script>
+{% endblock %}

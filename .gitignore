@@ -1,0 +1,33 @@
+# Django & Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+venv/
+.venv/
+env/
+.env
+ENV/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Node / JS Mockups
+node_modules/
+npm-debug.log*
+.eslintcache
+frontend/dist/
+frontend/node_modules/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
