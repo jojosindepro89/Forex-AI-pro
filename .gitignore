@@ -31,3 +31,4 @@ frontend/node_modules/
 .vscode/
 *.swp
 *.swo
+.vercel

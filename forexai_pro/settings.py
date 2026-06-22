@@ -72,6 +72,17 @@ DATABASES = {
     )
 }
 
+# Safeguard to prevent read-only SQLite crashes on Vercel
+import os
+from django.core.exceptions import ImproperlyConfigured
+if os.environ.get('VERCEL') and DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+    raise ImproperlyConfigured(
+        "DATABASE_URL environment variable is missing on Vercel. "
+        "Because Vercel runs on a serverless, read-only filesystem, you cannot use SQLite. "
+        "Please provision a PostgreSQL database (e.g., via Neon, Supabase, or Vercel Postgres) "
+        "and add the DATABASE_URL environment variable in your Vercel Project Settings."
+    )
+
 # Channel Layers — use InMemoryChannelLayer for dev (no Redis needed)
 CHANNEL_LAYERS = {
     'default': {
